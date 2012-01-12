@@ -1,0 +1,24 @@
+{
+    "server":{
+        "host":"irc.efnet.info",
+        "port":"6667",
+        "pass":""
+    },
+    "user":{
+        "name":"mewk2",
+        "nick":"mewkbot2"
+    },
+    "settings":{
+        "admins":["mewk"],
+        "channels":["#test2"],
+        "triggers":[{
+            "channel":"#test2",
+            "trigger":"!topic",
+            "message":"This is a test topic."
+        },{
+            "channel":"#test2",
+            "trigger":"!contest",
+            "message":"We have awesome contests!"
+        }]
+    }
+}
