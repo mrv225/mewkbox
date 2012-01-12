@@ -1,0 +1,30 @@
+{
+    "server":{
+        "host":"irc.rizon.net",
+        "port":"6667",
+        "pass":""
+    },
+    "user":{
+        "name":"mewkbot",
+        "nick":"mewkbot"
+    },
+    "settings":{
+        "admins":["mewk"],
+        "channels":{
+            "1":"#test2"
+        },
+        "triggers":[{
+            "channel":"#test2",
+            "trigger":"!topic",
+            "message":"This is a test topic."
+        },{
+            "channel":"#test2",
+            "trigger":"!contest",
+            "message":"We have awesome contests!"
+        },{
+            "channel":"#test2",
+            "trigger":"!content",
+            "message":"123"
+        }]
+        }
+    }
