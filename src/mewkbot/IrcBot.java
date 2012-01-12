@@ -184,10 +184,7 @@ public class IrcBot implements Runnable {
                                  */
 
                                 if ("!server".equalsIgnoreCase(botCommand)) {
-                                    if (botParameter != null) {
-                                        this.sendMessage(target, botParameter);
-                                        this.log("say in " + target + ": " + botParameter);
-                                    }
+                                    MineQueryClient.query("seegurke.endoftheinternet.org", 25565, 0);
                                 }
 
                                 if (botCommand.startsWith("!") && target.startsWith("#")) {
