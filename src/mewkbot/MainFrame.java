@@ -10,8 +10,8 @@ import mewkbot.IrcBot.OnReceiveEventListener;
 import mewkbot.IrcBot.OnSendEventListener;
 import mewkbot.IrcBot.OnStartEventListener;
 import mewkbot.IrcBot.OnStopEventListener;
-import mewkbot.entities.BotTrigger;
-import mewkbot.entities.BotConfiguration;
+import mewkbot.entities.Trigger;
+import mewkbot.entities.Configuration;
 import mewkbot.events.OnLogEvent;
 import mewkbot.events.OnReceiveEvent;
 import mewkbot.events.OnSendEvent;
@@ -473,7 +473,7 @@ private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:even
 }//GEN-LAST:event_formWindowClosing
 
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-    BotConfiguration config = new BotConfiguration();
+    Configuration config = new Configuration();
 
     config.setHost("irc.rizon.net");
     config.setPort(6667);
@@ -484,7 +484,7 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
 
     config.getAdmins().add("mewk");
     config.getChannels().add("#test2");
-    config.getTriggers().add(new BotTrigger("#test2", "!contest", "We have great contests!"));
+    config.getTriggers().add(new Trigger("#test2", "!contest", "We have great contests!"));
 
     this.bot = new IrcBot(config);
 

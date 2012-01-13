@@ -4,7 +4,7 @@ package mewkbot.entities;
  *
  * @author Mewes
  */
-public class BotTrigger {
+public class Trigger {
     private String channel;
     private String trigger;
     private String message;
@@ -51,13 +51,13 @@ public class BotTrigger {
         this.message = message;
     }
       
-    public BotTrigger() {
+    public Trigger() {
         this.channel = null;
         this.trigger = null;
         this.message = null;
     }
         
-    public BotTrigger(String channel, String trigger, String message) {
+    public Trigger(String channel, String trigger, String message) {
         this.channel = channel;
         this.trigger = trigger;
         this.message = message;
