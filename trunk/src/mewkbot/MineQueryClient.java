@@ -1,11 +1,7 @@
 package mewkbot;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
 
 /**
  *
@@ -13,19 +9,25 @@ import java.net.UnknownHostException;
  */
 public class MineQueryClient {
 
-    public static void query(String address, int port, int timeout) {
+    public static String[] query(String address, int port, int timeout) throws SocketTimeoutException {
+        byte[] buffer = new byte[256];
+        Socket socket = null;
         try {
-            Socket socket = new Socket(address, port);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            out.print("QUERY\n");
-
-            while(true) {
-                System.out.println(socket.getInputStream().read());
-            }
+            socket = new Socket(address, port);
+            socket.setSoTimeout(timeout);
+            socket.getOutputStream().write(254);
+            int len = socket.getInputStream().read(buffer);
+            String data = new String(buffer, 4, len - 3, "UTF-16LE");
+            return data.split("§");
         } catch (Exception e) {
             System.out.println(e.getMessage());
+        } finally {
+            try {
+                socket.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         }
+        return null;
     }
 }

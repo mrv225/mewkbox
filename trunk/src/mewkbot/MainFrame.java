@@ -483,7 +483,6 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     config.setNick("mewkbot");
 
     config.getAdmins().add("mewk");
-    config.getAdmins().add("wolf0815");
     config.getChannels().add("#test2");
     config.getTriggers().add(new BotTrigger("#test2", "!contest", "We have great contests!"));
 
