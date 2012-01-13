@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author Mewes
  */
-public class BotConfiguration {
+public class Configuration {
     private String host;
     private int port;
     private String pass;
@@ -15,7 +15,7 @@ public class BotConfiguration {
     private String nick;
     private List<String> admins = new ArrayList<String>();
     private List<String> channels = new ArrayList<String>();
-    private List<BotTrigger> triggers = new ArrayList<BotTrigger>();
+    private List<Trigger> triggers = new ArrayList<Trigger>();
 
     /**
      * @return the host
@@ -118,14 +118,14 @@ public class BotConfiguration {
     /**
      * @return the triggers
      */
-    public List<BotTrigger> getTriggers() {
+    public List<Trigger> getTriggers() {
         return triggers;
     }
 
     /**
      * @param triggers the triggers to set
      */
-    public void setTriggers(List<BotTrigger> triggers) {
+    public void setTriggers(List<Trigger> triggers) {
         this.triggers = triggers;
     }
 }
