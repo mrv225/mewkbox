@@ -428,7 +428,8 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
 
     @Override
     public void onLogEventOccurred(OnLogEvent evt) {
-        String data = "LOG: " + evt.getData().trim() + "\n";
+        String data = evt.getData();
+        String data = "LOG: " + .trim() + "\n";
         textLog.append(data);
     }
 
