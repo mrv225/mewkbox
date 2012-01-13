@@ -177,7 +177,7 @@ public class IrcBot implements Runnable {
                                     if ("!say".equalsIgnoreCase(botCommand)) {
                                         if (botParameter != null) {
                                             this.sendMessage(target, botParameter);
-                                            this.log("say in " + target + ": %s" + botParameter);
+                                            this.log("say in " + target + ": " + botParameter);
                                         }
                                     }
                                     if ("!set".equalsIgnoreCase(botCommand)) {
@@ -242,12 +242,12 @@ public class IrcBot implements Runnable {
                                 String name = content.substring(content.indexOf(" ") + 1).trim();
                                 
                                 Channel channel = this.channels.get(target);
-                                
+
                                 // add OP
                                 if ("+o".equals(mode)) {
                                     channel.getUser(name).setOperator(true);
                                 } 
-                                
+
                                 // remove OP
                                 else if ("-o".equals(mode)) {
                                     channel.getUser(name).setOperator(false);
