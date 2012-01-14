@@ -99,10 +99,6 @@ public class IrcBot implements Runnable {
             } catch (Exception e) {
                 this.log(e.getMessage());
             }
-
-            if (Thread.currentThread().isInterrupted()) {
-                _continue = false;
-            }
         }
 
         // disconnect
@@ -196,19 +192,21 @@ public class IrcBot implements Runnable {
     
     private boolean handleMode(String nickname, String command, String target, String content) {
         try {
-            String mode = content.substring(0, content.indexOf(" ")).trim();
-            String name = content.substring(content.indexOf(" ") + 1).trim();
-            
-            Channel channel = this.getChannels().get(target);
-            
-            // add OP
-            if ("+o".equals(mode)) {
-                channel.getUser(name).setOperator(true);
-            }
-            
-            // remove OP
-            else if ("-o".equals(mode)) {
-                channel.getUser(name).setOperator(false);
+            if (content.indexOf(" ") > 0) {
+                String mode = content.substring(0, content.indexOf(" ")).trim();
+                String name = content.substring(content.indexOf(" ") + 1).trim();
+
+                Channel channel = this.getChannels().get(target);
+
+                // add OP
+                if ("+o".equals(mode)) {
+                    channel.getUser(name).setOperator(true);
+                }
+
+                // remove OP
+                else if ("-o".equals(mode)) {
+                    channel.getUser(name).setOperator(false);
+                }
             }
         } catch (Exception e) {
             this.log(e.getMessage());
@@ -304,6 +302,7 @@ public class IrcBot implements Runnable {
         for (String channel : this.getConfig().getChannels()) {
             this.joinChannel(channel);
         }
+        
         return true;
     }
     //</editor-fold>

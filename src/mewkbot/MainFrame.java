@@ -1,5 +1,10 @@
 package mewkbot;
 
+import java.beans.DefaultPersistenceDelegate;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import javax.swing.UIManager;
 import mewkbot.commands.*;
 import mewkbot.listeners.*;
@@ -12,6 +17,7 @@ import mewkbot.events.*;
  */
 public class MainFrame extends javax.swing.JFrame implements OnLogEventListener, OnReceiveEventListener, OnSendEventListener, OnStartEventListener, OnStopEventListener {
 
+    Configuration configuration = null;
     IrcBot bot = null;
     Thread botThread = null;
 
@@ -25,6 +31,10 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         this.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/on.png")).getImage());
             
         initComponents();
+        
+        this.listEditorAdmins.addColumn("Name");
+        this.listEditorChannels.addColumn("Name");
+        this.listEditorTriggers.addColumns(new String[] { "Channel", "Trigger", "Message" });
     }
 
     private void startBot() {
@@ -41,6 +51,38 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         } catch (Exception e) {
             textLog.append("ERR: " + e.getMessage() + "\n");
         }
+    }
+    
+    private void loadConfig() {
+        try {
+            FileInputStream is = new FileInputStream("config.xml");
+            XMLDecoder e = new XMLDecoder(is);
+            this.configuration = (Configuration) e.readObject();
+            e.close();
+        } catch (Exception e) {
+            textLog.append("ERR: " + e.getMessage() + "\n");
+            this.configuration = new Configuration();
+        }
+    }
+    
+    private void saveConfig() {
+        try {
+            FileOutputStream os = new FileOutputStream("config.xml");
+            XMLEncoder e = new XMLEncoder(os);
+            e.writeObject(this.configuration);
+            e.flush();
+            e.close();
+        } catch (Exception e) {
+            textLog.append("ERR: " + e.getMessage() + "\n");
+        }
+    }
+    
+    private void config2Gui() {
+        
+    }
+    
+    private void gui2Config() {
+        
     }
     
     @Override
@@ -81,9 +123,6 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPopupMenu1 = new javax.swing.JPopupMenu();
-        jPopupMenu2 = new javax.swing.JPopupMenu();
-        jPanel6 = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         textLog = new javax.swing.JTextArea();
@@ -101,37 +140,14 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         jLabel5 = new javax.swing.JLabel();
         jTextField5 = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList();
-        buttonStart1 = new javax.swing.JButton();
-        buttonStart2 = new javax.swing.JButton();
-        buttonStart3 = new javax.swing.JButton();
+        listEditorChannels = new mewkbot.ListEditor();
         jPanel4 = new javax.swing.JPanel();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        jList3 = new javax.swing.JList();
-        buttonStart7 = new javax.swing.JButton();
-        buttonStart8 = new javax.swing.JButton();
-        buttonStart9 = new javax.swing.JButton();
+        listEditorTriggers = new mewkbot.ListEditor();
         jPanel5 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jList2 = new javax.swing.JList();
-        buttonStart4 = new javax.swing.JButton();
-        buttonStart5 = new javax.swing.JButton();
-        buttonStart6 = new javax.swing.JButton();
+        listEditorAdmins = new mewkbot.ListEditor();
         buttonStart = new javax.swing.JButton();
         buttonStop = new javax.swing.JButton();
         labelStatusIcon = new javax.swing.JLabel();
-
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("MewKBot");
@@ -148,7 +164,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         });
 
         textLog.setColumns(20);
-        textLog.setFont(new java.awt.Font("Courier New", 0, 13));
+        textLog.setFont(new java.awt.Font("Courier New", 0, 13)); // NOI18N
         textLog.setRows(5);
         jScrollPane1.setViewportView(textLog);
 
@@ -192,7 +208,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(147, Short.MAX_VALUE))
+                .addContainerGap(220, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Server", jPanel1);
@@ -227,190 +243,46 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(178, Short.MAX_VALUE))
+                .addContainerGap(251, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("User", jPanel2);
-
-        jList1.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane2.setViewportView(jList1);
-
-        buttonStart1.setText("Remove");
-        buttonStart1.setEnabled(false);
-        buttonStart1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart1ActionPerformed(evt);
-            }
-        });
-
-        buttonStart2.setText("Edit");
-        buttonStart2.setEnabled(false);
-        buttonStart2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart2ActionPerformed(evt);
-            }
-        });
-
-        buttonStart3.setText("Add");
-        buttonStart3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart3ActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(buttonStart3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart1)))
-                .addContainerGap())
+            .addComponent(listEditorChannels, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonStart1)
-                    .addComponent(buttonStart2)
-                    .addComponent(buttonStart3))
-                .addContainerGap())
+            .addComponent(listEditorChannels, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
         );
 
         jTabbedPane2.addTab("Channels", jPanel3);
-
-        jList3.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane4.setViewportView(jList3);
-
-        buttonStart7.setText("Add");
-        buttonStart7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart7ActionPerformed(evt);
-            }
-        });
-
-        buttonStart8.setText("Edit");
-        buttonStart8.setEnabled(false);
-        buttonStart8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart8ActionPerformed(evt);
-            }
-        });
-
-        buttonStart9.setText("Remove");
-        buttonStart9.setEnabled(false);
-        buttonStart9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart9ActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(buttonStart7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart9)))
-                .addContainerGap())
+            .addComponent(listEditorTriggers, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonStart9)
-                    .addComponent(buttonStart8)
-                    .addComponent(buttonStart7))
-                .addContainerGap())
+            .addComponent(listEditorTriggers, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
         );
 
         jTabbedPane2.addTab("Triggers", jPanel4);
-
-        jList2.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane3.setViewportView(jList2);
-
-        buttonStart4.setText("Add");
-        buttonStart4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart4ActionPerformed(evt);
-            }
-        });
-
-        buttonStart5.setText("Edit");
-        buttonStart5.setEnabled(false);
-        buttonStart5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart5ActionPerformed(evt);
-            }
-        });
-
-        buttonStart6.setText("Remove");
-        buttonStart6.setEnabled(false);
-        buttonStart6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStart6ActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(buttonStart4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonStart6)))
-                .addContainerGap())
+            .addComponent(listEditorAdmins, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonStart6)
-                    .addComponent(buttonStart5)
-                    .addComponent(buttonStart4))
-                .addContainerGap())
+            .addComponent(listEditorAdmins, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
         );
 
         jTabbedPane2.addTab("Admins", jPanel5);
@@ -454,7 +326,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -484,28 +356,15 @@ private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
 
 private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
     this.stopBot();
+    this.gui2Config();
+    this.saveConfig();
 }//GEN-LAST:event_formWindowClosing
 
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-    Configuration config = new Configuration();
+    this.loadConfig();
+    this.config2Gui();
 
-    config.setHost("irc.rizon.net");
-    config.setPort(6667);
-    config.setPass(null);
-    
-//    config.setHost("septivium.jtvirc.com");
-//    config.setPort(6667);
-//    config.setPass("chiquita");
-            
-    config.setName("mewkbot");
-    config.setNick("mewkbot");
-
-    config.getAdmins().add("mewk");
-    config.getChannels().add("#test2");
-//    config.getChannels().add("#septivium");
-    config.getTriggers().add(new Trigger("#test2", "!contest", "We have great contests!"));
-
-    this.bot = new IrcBot(config);
+    this.bot = new IrcBot(this.configuration);
 
     this.bot.addBotCommand(new JoinCommand());
     this.bot.addBotCommand(new PartCommand());
@@ -523,74 +382,20 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     this.bot.addOnStopEventListener(this);
 }//GEN-LAST:event_formWindowOpened
 
-private void buttonStart1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart1ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart1ActionPerformed
-
-private void buttonStart2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart2ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart2ActionPerformed
-
-private void buttonStart3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart3ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart3ActionPerformed
-
-private void buttonStart4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart4ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart4ActionPerformed
-
-private void buttonStart5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart5ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart5ActionPerformed
-
-private void buttonStart6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart6ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart6ActionPerformed
-
-private void buttonStart7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart7ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart7ActionPerformed
-
-private void buttonStart8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart8ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart8ActionPerformed
-
-private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStart9ActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_buttonStart9ActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonStart;
-    private javax.swing.JButton buttonStart1;
-    private javax.swing.JButton buttonStart2;
-    private javax.swing.JButton buttonStart3;
-    private javax.swing.JButton buttonStart4;
-    private javax.swing.JButton buttonStart5;
-    private javax.swing.JButton buttonStart6;
-    private javax.swing.JButton buttonStart7;
-    private javax.swing.JButton buttonStart8;
-    private javax.swing.JButton buttonStart9;
     private javax.swing.JButton buttonStop;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JList jList1;
-    private javax.swing.JList jList2;
-    private javax.swing.JList jList3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
-    private javax.swing.JPopupMenu jPopupMenu1;
-    private javax.swing.JPopupMenu jPopupMenu2;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTextField jTextField1;
@@ -599,6 +404,9 @@ private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
     private javax.swing.JLabel labelStatusIcon;
+    private mewkbot.ListEditor listEditorAdmins;
+    private mewkbot.ListEditor listEditorChannels;
+    private mewkbot.ListEditor listEditorTriggers;
     private javax.swing.JTextArea textLog;
     // End of variables declaration//GEN-END:variables
 
