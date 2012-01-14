@@ -29,6 +29,54 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         initComponents();
     }
 
+    private void startBot() {
+        this.botThread = new Thread(this.bot);
+        this.botThread.start();
+    }
+
+    private void stopBot() {
+        try {
+            this.bot.disconnect();
+            if (!this.botThread.isInterrupted()) {
+                this.botThread.interrupt();
+            }
+        } catch (Exception e) {
+            textLog.append("ERR: " + e.getMessage() + "\n");
+        }
+    }
+    
+    @Override
+    public void onLogEventOccurred(OnLogEvent evt) {
+        String data = evt.getData();
+        if (data != null) {
+            textLog.append("LOG: " + data.trim() + "\n");
+        }
+    }
+
+    @Override
+    public void onReceiveEventOccurred(OnReceiveEvent evt) {
+        String data = "IN:  " + evt.getData().trim() + "\n";
+        textLog.append(data);
+    }
+
+    @Override
+    public void onSendEventOccurred(OnSendEvent evt) {
+        String data = "OUT: " + evt.getData().trim() + "\n";
+        textLog.append(data);
+    }
+
+    @Override
+    public void onStartEventOccurred(OnStartEvent evt) {
+        this.buttonStart.setEnabled(false);
+        this.buttonStop.setEnabled(true);
+    }
+
+    @Override
+    public void onStopEventOccurred(OnStopEvent evt) {
+        this.buttonStart.setEnabled(true);
+        this.buttonStop.setEnabled(false);
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -424,38 +472,6 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    @Override
-    public void onLogEventOccurred(OnLogEvent evt) {
-        String data = evt.getData();
-        if (data != null) {
-            textLog.append("LOG: " + data.trim() + "\n");
-        }
-    }
-
-    @Override
-    public void onReceiveEventOccurred(OnReceiveEvent evt) {
-        String data = "IN:  " + evt.getData().trim() + "\n";
-        textLog.append(data);
-    }
-
-    @Override
-    public void onSendEventOccurred(OnSendEvent evt) {
-        String data = "OUT: " + evt.getData().trim() + "\n";
-        textLog.append(data);
-    }
-
-    @Override
-    public void onStartEventOccurred(OnStartEvent evt) {
-        this.buttonStart.setEnabled(false);
-        this.buttonStop.setEnabled(true);
-    }
-
-    @Override
-    public void onStopEventOccurred(OnStopEvent evt) {
-        this.buttonStart.setEnabled(true);
-        this.buttonStop.setEnabled(false);
-    }
-
 private void buttonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStartActionPerformed
     this.buttonStart.setEnabled(false);
     this.buttonStop.setEnabled(true);
@@ -540,15 +556,6 @@ private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
 // TODO add your handling code here:
 }//GEN-LAST:event_buttonStart9ActionPerformed
 
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                new MainFrame().setVisible(true);
-            }
-        });
-    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStart1;
@@ -592,19 +599,13 @@ private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     private javax.swing.JTextArea textLog;
     // End of variables declaration//GEN-END:variables
 
-    private void startBot() {
-        this.botThread = new Thread(this.bot);
-        this.botThread.start();
-    }
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
 
-    private void stopBot() {
-        try {
-            this.bot.disconnect();
-            if (!this.botThread.isInterrupted()) {
-                this.botThread.interrupt();
+            @Override
+            public void run() {
+                new MainFrame().setVisible(true);
             }
-        } catch (Exception e) {
-            textLog.append("ERR: " + e.getMessage() + "\n");
-        }
+        });
     }
 }
