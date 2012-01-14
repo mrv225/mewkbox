@@ -1,8 +1,3 @@
-/*
- * MainFrame.java
- *
- * Created on 08.01.2012, 15:05:24
- */
 package mewkbot;
 
 import mewkbot.IrcBot.OnLogEventListener;
@@ -10,6 +5,9 @@ import mewkbot.IrcBot.OnReceiveEventListener;
 import mewkbot.IrcBot.OnSendEventListener;
 import mewkbot.IrcBot.OnStartEventListener;
 import mewkbot.IrcBot.OnStopEventListener;
+import mewkbot.commands.SayCommand;
+import mewkbot.commands.SetCommand;
+import mewkbot.commands.UnsetCommand;
 import mewkbot.entities.Trigger;
 import mewkbot.entities.Configuration;
 import mewkbot.events.OnLogEvent;
@@ -429,8 +427,9 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     @Override
     public void onLogEventOccurred(OnLogEvent evt) {
         String data = evt.getData();
-        String data = "LOG: " + .trim() + "\n";
-        textLog.append(data);
+        if (data != null) {
+            textLog.append("LOG: " + data.trim() + "\n");
+        }
     }
 
     @Override
@@ -476,19 +475,28 @@ private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:even
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
     Configuration config = new Configuration();
 
-    config.setHost("irc.rizon.net");
+//    config.setHost("irc.rizon.net");
+//    config.setPort(6667);
+//    config.setPass(null);
+    
+    config.setHost("septivium.jtvirc.com");
     config.setPort(6667);
-    config.setPass(null);
-
+    config.setPass("chiquita");
+            
     config.setName("mewkbot");
     config.setNick("mewkbot");
 
     config.getAdmins().add("mewk");
-    config.getChannels().add("#test2");
+//    config.getChannels().add("#test2");
+    config.getChannels().add("#septivium");
     config.getTriggers().add(new Trigger("#test2", "!contest", "We have great contests!"));
 
     this.bot = new IrcBot(config);
 
+    this.bot.addBotCommand(new SayCommand());
+    this.bot.addBotCommand(new SetCommand());
+    this.bot.addBotCommand(new UnsetCommand());
+    
     this.bot.addOnLogEventListener(this);
     this.bot.addOnReceiveEventListener(this);
     this.bot.addOnSendEventListener(this);

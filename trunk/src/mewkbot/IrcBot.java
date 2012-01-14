@@ -29,6 +29,24 @@ import mewkbot.events.OnStopEvent;
  */
 public class IrcBot implements Runnable {
 
+    /**
+     * @return the config
+     */
+    public Configuration getConfig() {
+        return config;
+    }
+
+    public void addBotCommand(BotCommand botCommand) {
+        this.commands.put(botCommand.getName(), botCommand);
+    }
+
+    /**
+     * @return the channels
+     */
+    public Map<String, Channel> getChannels() {
+        return channels;
+    }
+
     public interface OnLogEventListener extends EventListener {
 
         public void onLogEventOccurred(OnLogEvent evt);
@@ -53,10 +71,18 @@ public class IrcBot implements Runnable {
 
         public void onStopEventOccurred(OnStopEvent evt);
     }
+
+    public interface BotCommand {
+
+        public String getName();
+
+        public boolean run(User user, Channel channel, String data, IrcBot client);
+    }
+    public static final String RPL_WELCOME = "001";
     public static final String RPL_NAMREPLY = "353";
-    protected Configuration config;
+    private Configuration config;
     private Map<String, Channel> channels = new HashMap<String, Channel>();
-    
+    private Map<String, BotCommand> commands = new HashMap<String, BotCommand>();
     private Socket socket = null;
     private PrintWriter out = null;
     private BufferedReader in = null;
@@ -66,7 +92,7 @@ public class IrcBot implements Runnable {
     }
 
     public void connect() throws UnknownHostException, IOException {
-        this.socket = new Socket(this.config.getHost(), this.config.getPort());
+        this.socket = new Socket(this.getConfig().getHost(), this.getConfig().getPort());
         this.out = new PrintWriter(this.socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
     }
@@ -76,30 +102,30 @@ public class IrcBot implements Runnable {
         try {
             this.out.close();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            this.log(e.getMessage());
         } finally {
             try {
                 this.in.close();
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                this.log(e.getMessage());
             } finally {
                 try {
                     this.socket.close();
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    this.log(e.getMessage());
                 }
             }
         }
     }
 
     public void login() {
-        if (this.config.getPass() != null) {
-            this.sendData("PASS", this.config.getPass());
+        if (this.getConfig().getPass() != null) {
+            this.sendData("PASS", this.getConfig().getPass());
         }
 
         // 0 = default, 8 = invisible
-        this.sendData("USER", this.config.getNick() + " 0 * :" + this.config.getName());
-        this.sendData("NICK", this.config.getNick());
+        this.sendData("USER", this.getConfig().getNick() + " 0 * :" + this.getConfig().getName());
+        this.sendData("NICK", this.getConfig().getNick());
     }
 
     @Override
@@ -108,9 +134,6 @@ public class IrcBot implements Runnable {
         try {
             this.connect();
             this.login();
-            for (String channel : this.config.getChannels()) {
-                this.joinChannel(channel);
-            }
         } catch (Exception e) {
             this.log(e.getMessage());
         }
@@ -123,6 +146,9 @@ public class IrcBot implements Runnable {
                 String data = this.in.readLine();
 
                 if (data != null) {
+                    // fire event
+                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
+
                     String[] dataParts = data.split(" ", 4);
 
                     // PING
@@ -134,154 +160,110 @@ public class IrcBot implements Runnable {
                         String target = dataParts.length > 2 ? dataParts[2].trim() : null;
                         String content = dataParts.length > 3 ? dataParts[3].substring(1).trim() : null;
 
-                        // PRIVMSG
-                        if ("PRIVMSG".equals(command)) {
-                            Channel channel = this.channels.get(target);
-                            User user = channel.getUser(nickname);
-                            
-                            if (content != null & !content.isEmpty()) {
-                                String[] messageParts = content.split(" ", 2);
-                                String botCommand = messageParts.length > 0 ? messageParts[0].trim() : null;
-                                String botParameter = messageParts.length > 1 ? messageParts[1].trim() : null;
+                        if ("JOIN".equals(command)) {
+                            // JOIN
+                            try {
                                 String name = nickname.substring(1, nickname.indexOf("!"));
-
-                                /*
-                                 * Admin commands
-                                 */
-                                if (this.isAdmin(name)) {
-                                    if ("!join".equalsIgnoreCase(botCommand)) {
-                                        if (botParameter != null && botParameter.startsWith("#")) {
-                                            this.joinChannel(botParameter);
-                                            this.log("join " + botParameter);
-                                        }
-                                    } else if ("!rejoin".equalsIgnoreCase(botCommand)) {
-                                        for (Entry<String, Channel> channelEntry : this.channels.entrySet()) {
-                                            this.joinChannel(channelEntry.getKey());
-                                        }
-                                        this.log("rejoin all channels");
-                                    } else if ("!part".equalsIgnoreCase(botCommand)) {
-                                        if (botParameter != null && botParameter.startsWith("#")) {
-                                            this.partChannel(botParameter);
-                                            this.log("part " + botParameter);
-                                        }
-                                    } else if ("!shutdown".equalsIgnoreCase(botCommand)) {
-                                        this.log("shutdown");
-                                        _continue = false;
-                                    }
-                                }
-
-                                /*
-                                 * Operator commands
-                                 */
-                                if (this.isAdmin(name) || user.isOperator()) {
-                                    if ("!say".equalsIgnoreCase(botCommand)) {
-                                        if (botParameter != null) {
-                                            this.sendMessage(target, botParameter);
-                                            this.log("say in " + target + ": " + botParameter);
-                                        }
-                                    }
-                                    if ("!set".equalsIgnoreCase(botCommand)) {
-                                        // TODO: Overwrite
-
-                                        String botParameter2 = botParameter.substring(botParameter.indexOf(" ")).trim();
-                                        botParameter = botParameter.substring(0, botParameter.indexOf(" ")).trim();
-
-                                        boolean _replaced = false;
-                                        for (int i = 0; i < this.config.getTriggers().size(); i++) {
-                                            if (this.config.getTriggers().get(i).getTrigger().equalsIgnoreCase("!" + botParameter)) {
-                                                this.config.getTriggers().get(i).setMessage(botParameter2);
-                                                _replaced = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (!_replaced) {
-                                            this.config.getTriggers().add(new Trigger(target, "!" + botParameter, botParameter2));
-                                        }
-                                        this.log("set trigger in " + target + ": " + botParameter + " = " + botParameter2);
-                                    }
-                                    if ("!unset".equalsIgnoreCase(botCommand)) {
-                                        for (int i = 0; i < this.config.getTriggers().size(); i++) {
-                                            if (this.config.getTriggers().get(i).getTrigger().equalsIgnoreCase("!" + botParameter)) {
-                                                this.config.getTriggers().remove(i);
-                                                this.log("unset trigger in " + target + ": " + botParameter);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                /*
-                                 * User triggers
-                                 */
-
-                                if ("!server".equalsIgnoreCase(botCommand)) {
-                                    String[] infoArray = MineQueryClient.query("seegurke.endoftheinternet.org", 25565, 1000);
-                                    if (infoArray != null) {
-                                        this.sendMessage(target, "Server is online. ("+infoArray[1]+"/"+infoArray[2]+")");
-                                    } else {
-                                        this.sendMessage(target, "Server is offline.");
-                                    }
-                                    this.log("trigger in " + target + ": server");
-                                }
-
-                                if (botCommand.startsWith("!") && target.startsWith("#")) {
-                                    for (int i = 0; i < this.config.getTriggers().size(); i++) {
-                                        if (this.config.getTriggers().get(i).getTrigger().equalsIgnoreCase(botCommand)) {
-                                            this.sendMessage(target, this.config.getTriggers().get(i).getMessage());
-                                            this.log("trigger in " + target + ": " + botCommand);
-                                            break;
-                                        }
-                                    }
-                                }
+                                
+                                User user = new User();
+                                user.setNick(name);
+                                
+                                Channel channel = this.getChannels().get(target);
+                                channel.addUser(user);
+                            } catch (Exception e) {
                             }
-                        } // MODE
-                        else if ("MODE".equals(command)) {
+                        } else if ("MODE".equals(command)) {
+                            // MODE
                             try {
                                 String mode = content.substring(0, content.indexOf(" ")).trim();
                                 String name = content.substring(content.indexOf(" ") + 1).trim();
-                                
-                                Channel channel = this.channels.get(target);
+
+                                Channel channel = this.getChannels().get(target);
 
                                 // add OP
                                 if ("+o".equals(mode)) {
                                     channel.getUser(name).setOperator(true);
-                                } 
-
-                                // remove OP
+                                } // remove OP
                                 else if ("-o".equals(mode)) {
                                     channel.getUser(name).setOperator(false);
                                 }
                             } catch (Exception e2) {
                                 this.log(e2.getMessage());
                             }
-                        } // NAMELIST
-                        else if (RPL_NAMREPLY.equals(command)) {
+                        } else if ("PART".equals(command)) {
+                                String name = nickname.substring(1, nickname.indexOf("!"));
+                                
+                                Channel channel = this.getChannels().get(target);
+                                channel.removeUser(name);
+                        } else if ("PRIVMSG".equals(command)) {
+                            // PRIVMSG
+                            Channel channel = this.getChannels().get(target);
+
+                            if (content != null & !content.isEmpty()) {
+                                String[] messageParts = content.split(" ", 2);
+                                String botCommand = messageParts.length > 0 ? messageParts[0].trim() : null;
+                                String botParameter = messageParts.length > 1 ? messageParts[1].trim() : null;
+                                String name = nickname.substring(1, nickname.indexOf("!"));
+
+                                User user = null;
+                                if (channel != null) {
+                                    user = channel.getUser(name);
+                                } else {
+                                    user = new User();
+                                    user.setNick(name);
+                                }
+
+                                // lookup command
+                                BotCommand botCommandInstance = this.commands.get(botCommand);
+                                if (botCommandInstance != null) {
+                                    _continue = botCommandInstance.run(user, channel, botParameter, this);
+                                } else {
+                                    // default command
+                                    if (botCommand.startsWith("!") && channel != null) {
+                                        for (int i = 0; i < this.getConfig().getTriggers().size(); i++) {
+                                            if (this.getConfig().getTriggers().get(i).getTrigger().equalsIgnoreCase(botCommand)) {
+                                                this.log("trigger in " + channel.getName() + ": " + botCommand);
+                                                this.sendMessage(channel.getName(), this.getConfig().getTriggers().get(i).getMessage());
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (RPL_NAMREPLY.equals(command)) {
+                            // NAMELIST
                             try {
-                                String channelName = content.substring(1, content.indexOf(":")).trim();
+                                String channelName = content.substring(0, content.indexOf(":")).trim();
                                 String namelist = content.substring(content.indexOf(":") + 1).trim();
                                 String[] names = namelist.split(" ");
 
-                                Channel channel = this.channels.get(channelName);
+                                Channel channel = this.getChannels().get(channelName);
                                 channel.setJoined(true);
-                                
+
                                 // reset users
                                 channel.setUsers(new HashMap<String, User>());
 
                                 // add users
                                 for (String _nickname : names) {
                                     User user = new User();
-                                    user.setNick(_nickname);
-                                    user.setOperator(_nickname.startsWith("@"));
+                                    if (_nickname.startsWith("@")) {
+                                        user.setNick(_nickname.substring(1));
+                                        user.setOperator(true);
+                                    } else {
+                                        user.setNick(_nickname);
+                                    }
                                     channel.addUser(user);
                                 }
                             } catch (Exception e2) {
                                 this.log(e2.getMessage());
                             }
+                        } else if (RPL_WELCOME.equals(command)) {
+                            // Welcome message
+                            for (String channel : this.getConfig().getChannels()) {
+                                this.joinChannel(channel);
+                            }
                         }
                     }
-
-                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
                 }
             } catch (IOException e) {
                 this.log(e.getMessage());
@@ -330,22 +312,22 @@ public class IrcBot implements Runnable {
         if (!this.channels.containsKey(name)) {
             channel = new Channel();
             channel.setName(name);
-            this.channels.put(name, channel);
+            this.getChannels().put(name, channel);
         } else {
-            channel = this.channels.get(name);
+            channel = this.getChannels().get(name);
         }
         this.sendData("JOIN", channel.getName());
     }
 
     public void partChannel(String name) {
-        if (this.channels.containsKey(name)) {
-            this.channels.remove(name);
+        if (this.getChannels().containsKey(name)) {
+            this.getChannels().remove(name);
         }
         this.sendData("PART", name);
     }
 
     public boolean isAdmin(String name) {
-        return this.config.getAdmins().contains(name);
+        return this.getConfig().getAdmins().contains(name);
     }
     /*
      * OnLogEvent
