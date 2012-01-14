@@ -2,7 +2,7 @@ package mewkbot.commands;
 
 import java.net.SocketTimeoutException;
 import mewkbot.IrcBot;
-import mewkbot.IrcBot.BotCommand;
+import mewkbot.ICommand;
 import mewkbot.MineQueryClient;
 import mewkbot.entities.Channel;
 import mewkbot.entities.User;
@@ -11,7 +11,7 @@ import mewkbot.entities.User;
  *
  * @author Mewes
  */
-public class ServerCommand implements BotCommand {
+public class ServerCommand implements ICommand {
 
     @Override
     public String getName() {

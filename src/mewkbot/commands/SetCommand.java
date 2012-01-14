@@ -1,7 +1,7 @@
 package mewkbot.commands;
 
 import mewkbot.IrcBot;
-import mewkbot.IrcBot.BotCommand;
+import mewkbot.ICommand;
 import mewkbot.entities.Channel;
 import mewkbot.entities.Trigger;
 import mewkbot.entities.User;
@@ -10,7 +10,7 @@ import mewkbot.entities.User;
  *
  * @author Mewes
  */
-public class SetCommand implements BotCommand {
+public class SetCommand implements ICommand {
 
     @Override
     public String getName() {

@@ -1,7 +1,7 @@
 package mewkbot.commands;
 
+import mewkbot.ICommand;
 import mewkbot.IrcBot;
-import mewkbot.IrcBot.BotCommand;
 import mewkbot.entities.Channel;
 import mewkbot.entities.User;
 
@@ -9,7 +9,7 @@ import mewkbot.entities.User;
  *
  * @author Mewes
  */
-public class JoinCommand implements BotCommand {
+public class JoinCommand implements ICommand {
 
     @Override
     public String getName() {
