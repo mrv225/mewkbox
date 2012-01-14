@@ -1,25 +1,10 @@
 package mewkbot;
 
-import mewkbot.commands.JoinCommand;
-import mewkbot.commands.PartCommand;
-import mewkbot.commands.QuitCommand;
-import mewkbot.commands.RejoinCommand;
-import mewkbot.listeners.OnLogEventListener;
-import mewkbot.listeners.OnReceiveEventListener;
-import mewkbot.listeners.OnSendEventListener;
-import mewkbot.listeners.OnStartEventListener;
-import mewkbot.listeners.OnStopEventListener;
-import mewkbot.commands.SayCommand;
-import mewkbot.commands.ServerCommand;
-import mewkbot.commands.SetCommand;
-import mewkbot.commands.UnsetCommand;
-import mewkbot.entities.Trigger;
-import mewkbot.entities.Configuration;
-import mewkbot.events.OnLogEvent;
-import mewkbot.events.OnReceiveEvent;
-import mewkbot.events.OnSendEvent;
-import mewkbot.events.OnStartEvent;
-import mewkbot.events.OnStopEvent;
+import javax.swing.UIManager;
+import mewkbot.commands.*;
+import mewkbot.listeners.*;
+import mewkbot.entities.*;
+import mewkbot.events.*;
 
 /**
  *
@@ -31,6 +16,14 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     Thread botThread = null;
 
     public MainFrame() {
+        try {
+          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch(Exception e) {
+          System.out.println("Error setting native LAF: " + e);
+        }
+        
+        this.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/on.png")).getImage());
+            
         initComponents();
     }
 
@@ -142,6 +135,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("MewKBot");
+        setIconImage(getIconImage());
         setMinimumSize(new java.awt.Dimension(300, 300));
         setName("mainFrame"); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
