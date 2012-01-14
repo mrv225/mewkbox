@@ -22,23 +22,23 @@ import mewkbot.events.OnLogEvent;
 import mewkbot.events.OnSendEvent;
 import mewkbot.events.OnStartEvent;
 import mewkbot.events.OnStopEvent;
+import mewkbot.listeners.OnLogEventListener;
+import mewkbot.listeners.OnSendEventListener;
+import mewkbot.listeners.OnStartEventListener;
+import mewkbot.listeners.OnStopEventListener;
 
 /**
  *
  * @author Mewes
  */
 public class IrcBot implements Runnable {
-    public interface BotCommand {
-        public String getName();
-        public boolean run(User user, Channel channel, String data, IrcBot client);
-    }
-    
+
     public static final String RPL_WELCOME = "001";
     public static final String RPL_NAMREPLY = "353";
     
     private Configuration config;
     private Map<String, Channel> channels = new HashMap<String, Channel>();
-    private Map<String, BotCommand> commands = new HashMap<String, BotCommand>();
+    private Map<String, ICommand> commands = new HashMap<String, ICommand>();
     
     private Socket socket = null;
     private PrintWriter out = null;
@@ -57,10 +57,12 @@ public class IrcBot implements Runnable {
         } catch (Exception e) {
             this.log(e.getMessage());
         }
+        
         this.fireOnStartEvent(new OnStartEvent(this));
 
         // main loop
         boolean _continue = true;
+        
         while (_continue && !Thread.interrupted()) {
             try {
                 String data = this.in.readLine();
@@ -78,7 +80,7 @@ public class IrcBot implements Runnable {
                         String nickname = dataParts.length > 0 ? dataParts[0].trim() : null;
                         String command = dataParts.length > 1 ? dataParts[1].trim() : null;
                         String target = dataParts.length > 2 ? dataParts[2].trim() : null;
-                        String content = dataParts.length > 3 ? dataParts[3].substring(1).trim() : null;
+                        String content = dataParts.length > 3 ? (!dataParts[3].isEmpty() ? dataParts[3].substring(1).trim() : null) : null;
 
                         if ("JOIN".equals(command)) {
                             this.handleJoin(nickname, command, target, content);
@@ -113,8 +115,6 @@ public class IrcBot implements Runnable {
         } catch (IOException e) {
             this.log(e.getMessage());
         }
-        
-        this.fireOnStopEvent(new OnStopEvent(this));
     }
     
     /*
@@ -128,8 +128,9 @@ public class IrcBot implements Runnable {
     }
 
     public void disconnect() throws IOException {
-        if (this.socket.isConnected()) {
+        if (!this.socket.isClosed()) {
             this.sendData("QUIT");
+            
             try {
                 this.out.close();
             } catch (Exception e) {
@@ -147,6 +148,8 @@ public class IrcBot implements Runnable {
                     }
                 }
             }
+            
+            this.fireOnStopEvent(new OnStopEvent(this));
         }
     }
 
@@ -248,7 +251,7 @@ public class IrcBot implements Runnable {
                 }
                 
                 // lookup command
-                BotCommand botCommandInstance = this.commands.get(botCommand);
+                ICommand botCommandInstance = this.commands.get(botCommand);
                 if (botCommandInstance != null) {
                     _continue = botCommandInstance.run(user, channel, botParameter, this);
                 } else {
@@ -321,7 +324,7 @@ public class IrcBot implements Runnable {
         return this.getConfig().getAdmins().contains(name);
     }
     
-    public void addBotCommand(BotCommand botCommand) {
+    public void addBotCommand(ICommand botCommand) {
         this.commands.put(botCommand.getName(), botCommand);
     }
     
@@ -379,11 +382,7 @@ public class IrcBot implements Runnable {
     /*
      * OnLogEvent
      */
-    
-    public interface OnLogEventListener extends EventListener {
-        public void onLogEventOccurred(OnLogEvent evt);
-    }
-    
+       
     protected EventListenerList onLogListenerList = new EventListenerList();
     
     public void addOnLogEventListener(OnLogEventListener listener) {
@@ -438,10 +437,6 @@ public class IrcBot implements Runnable {
      * OnSendEvent
      */
     
-    public interface OnSendEventListener extends EventListener {
-        public void onSendEventOccurred(OnSendEvent evt);
-    }
-    
     protected EventListenerList onSendEventListenerList = new EventListenerList();
     
     public void addOnSendEventListener(OnSendEventListener listener) {
@@ -467,10 +462,6 @@ public class IrcBot implements Runnable {
      * OnStartEvent
      */
     
-    public interface OnStartEventListener extends EventListener {
-        public void onStartEventOccurred(OnStartEvent evt);
-    }
-    
     protected EventListenerList onStartEventListenerList = new EventListenerList();
     
     public void addOnStartEventListener(OnStartEventListener listener) {
@@ -492,14 +483,9 @@ public class IrcBot implements Runnable {
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="OnStopEvent">
-    
     /*
      * OnStopEvent
      */
-    
-    public interface OnStopEventListener extends EventListener {
-        public void onStopEventOccurred(OnStopEvent evt);
-    }
     
     protected EventListenerList onStopEventListenerList = new EventListenerList();
     

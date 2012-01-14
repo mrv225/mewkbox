@@ -2,7 +2,7 @@ package mewkbot.commands;
 
 import java.util.Map.Entry;
 import mewkbot.IrcBot;
-import mewkbot.IrcBot.BotCommand;
+import mewkbot.ICommand;
 import mewkbot.entities.Channel;
 import mewkbot.entities.User;
 
@@ -10,7 +10,7 @@ import mewkbot.entities.User;
  *
  * @author Mewes
  */
-public class RejoinCommand implements BotCommand {
+public class RejoinCommand implements ICommand {
 
     @Override
     public String getName() {

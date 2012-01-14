@@ -1,10 +1,10 @@
 package mewkbot;
 
-import mewkbot.IrcBot.OnLogEventListener;
-import mewkbot.IrcBot.OnReceiveEventListener;
-import mewkbot.IrcBot.OnSendEventListener;
-import mewkbot.IrcBot.OnStartEventListener;
-import mewkbot.IrcBot.OnStopEventListener;
+import mewkbot.listeners.OnLogEventListener;
+import mewkbot.listeners.OnReceiveEventListener;
+import mewkbot.listeners.OnSendEventListener;
+import mewkbot.listeners.OnStartEventListener;
+import mewkbot.listeners.OnStopEventListener;
 import mewkbot.commands.SayCommand;
 import mewkbot.commands.SetCommand;
 import mewkbot.commands.UnsetCommand;
