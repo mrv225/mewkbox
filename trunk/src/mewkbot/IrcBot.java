@@ -23,6 +23,7 @@ import mewkbot.events.OnSendEvent;
 import mewkbot.events.OnStartEvent;
 import mewkbot.events.OnStopEvent;
 import mewkbot.listeners.OnLogEventListener;
+import mewkbot.listeners.OnReceiveEventListener;
 import mewkbot.listeners.OnSendEventListener;
 import mewkbot.listeners.OnStartEventListener;
 import mewkbot.listeners.OnStopEventListener;
@@ -407,10 +408,6 @@ public class IrcBot implements Runnable {
     /*
      * OnReceiveEvent
      */
-    
-    public interface OnReceiveEventListener extends EventListener {
-        public void onReceiveEventOccurred(OnReceiveEvent evt);
-    }
     
     protected EventListenerList onReceiveListenerList = new EventListenerList();
     
