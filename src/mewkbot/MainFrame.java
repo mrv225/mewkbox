@@ -1,11 +1,16 @@
 package mewkbot;
 
+import mewkbot.commands.JoinCommand;
+import mewkbot.commands.PartCommand;
+import mewkbot.commands.QuitCommand;
+import mewkbot.commands.RejoinCommand;
 import mewkbot.listeners.OnLogEventListener;
 import mewkbot.listeners.OnReceiveEventListener;
 import mewkbot.listeners.OnSendEventListener;
 import mewkbot.listeners.OnStartEventListener;
 import mewkbot.listeners.OnStopEventListener;
 import mewkbot.commands.SayCommand;
+import mewkbot.commands.ServerCommand;
 import mewkbot.commands.SetCommand;
 import mewkbot.commands.UnsetCommand;
 import mewkbot.entities.Trigger;
@@ -69,12 +74,14 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     public void onStartEventOccurred(OnStartEvent evt) {
         this.buttonStart.setEnabled(false);
         this.buttonStop.setEnabled(true);
+        this.labelStatusIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/on.png")));
     }
 
     @Override
     public void onStopEventOccurred(OnStopEvent evt) {
         this.buttonStart.setEnabled(true);
         this.buttonStop.setEnabled(false);
+        this.labelStatusIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/off.png")));
     }
     
     @SuppressWarnings("unchecked")
@@ -120,7 +127,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         buttonStart6 = new javax.swing.JButton();
         buttonStart = new javax.swing.JButton();
         buttonStop = new javax.swing.JButton();
-        jLabel6 = new javax.swing.JLabel();
+        labelStatusIcon = new javax.swing.JLabel();
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -147,7 +154,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         });
 
         textLog.setColumns(20);
-        textLog.setFont(new java.awt.Font("Courier New", 0, 13)); // NOI18N
+        textLog.setFont(new java.awt.Font("Courier New", 0, 13));
         textLog.setRows(5);
         jScrollPane1.setViewportView(textLog);
 
@@ -191,7 +198,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(154, Short.MAX_VALUE))
+                .addContainerGap(147, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Server", jPanel1);
@@ -226,7 +233,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(185, Short.MAX_VALUE))
+                .addContainerGap(178, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("User", jPanel2);
@@ -281,7 +288,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonStart1)
@@ -326,8 +333,6 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 413, Short.MAX_VALUE)
-            .addGap(0, 413, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -342,11 +347,9 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 247, Short.MAX_VALUE)
-            .addGap(0, 247, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonStart9)
@@ -391,7 +394,6 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 413, Short.MAX_VALUE)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -406,10 +408,9 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 247, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonStart6)
@@ -437,8 +438,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             }
         });
 
-        jLabel6.setText("jLabel6");
-        jLabel6.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        labelStatusIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/off.png"))); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -452,20 +452,24 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                         .addComponent(buttonStart)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonStop)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 241, Short.MAX_VALUE)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 273, Short.MAX_VALUE)
+                        .addComponent(labelStatusIcon)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 303, Short.MAX_VALUE)
-                .addGap(8, 8, 8)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonStart)
-                    .addComponent(buttonStop)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(labelStatusIcon, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(8, 8, 8)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(buttonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(buttonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
 
@@ -491,25 +495,30 @@ private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:even
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
     Configuration config = new Configuration();
 
-//    config.setHost("irc.rizon.net");
-//    config.setPort(6667);
-//    config.setPass(null);
-    
-    config.setHost("septivium.jtvirc.com");
+    config.setHost("irc.rizon.net");
     config.setPort(6667);
-    config.setPass("chiquita");
+    config.setPass(null);
+    
+//    config.setHost("septivium.jtvirc.com");
+//    config.setPort(6667);
+//    config.setPass("chiquita");
             
     config.setName("mewkbot");
     config.setNick("mewkbot");
 
     config.getAdmins().add("mewk");
-//    config.getChannels().add("#test2");
-    config.getChannels().add("#septivium");
+    config.getChannels().add("#test2");
+//    config.getChannels().add("#septivium");
     config.getTriggers().add(new Trigger("#test2", "!contest", "We have great contests!"));
 
     this.bot = new IrcBot(config);
 
+    this.bot.addBotCommand(new JoinCommand());
+    this.bot.addBotCommand(new PartCommand());
+    this.bot.addBotCommand(new QuitCommand());
+    this.bot.addBotCommand(new RejoinCommand());
     this.bot.addBotCommand(new SayCommand());
+    this.bot.addBotCommand(new ServerCommand());
     this.bot.addBotCommand(new SetCommand());
     this.bot.addBotCommand(new UnsetCommand());
     
@@ -573,7 +582,6 @@ private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JList jList1;
     private javax.swing.JList jList2;
     private javax.swing.JList jList3;
@@ -596,6 +604,7 @@ private void buttonStart9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
+    private javax.swing.JLabel labelStatusIcon;
     private javax.swing.JTextArea textLog;
     // End of variables declaration//GEN-END:variables
 

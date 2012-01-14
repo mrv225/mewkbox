@@ -1,7 +1,6 @@
 package mewkbot;
 
 import mewkbot.entities.User;
-import mewkbot.entities.Trigger;
 import mewkbot.entities.Configuration;
 import mewkbot.events.OnReceiveEvent;
 import java.io.BufferedReader;
@@ -10,12 +9,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.EventListener;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.swing.event.EventListenerList;
 import mewkbot.entities.Channel;
 import mewkbot.events.OnLogEvent;
