@@ -28,61 +28,18 @@ import mewkbot.events.OnStopEvent;
  * @author Mewes
  */
 public class IrcBot implements Runnable {
-
-    /**
-     * @return the config
-     */
-    public Configuration getConfig() {
-        return config;
-    }
-
-    public void addBotCommand(BotCommand botCommand) {
-        this.commands.put(botCommand.getName(), botCommand);
-    }
-
-    /**
-     * @return the channels
-     */
-    public Map<String, Channel> getChannels() {
-        return channels;
-    }
-
-    public interface OnLogEventListener extends EventListener {
-
-        public void onLogEventOccurred(OnLogEvent evt);
-    }
-
-    public interface OnReceiveEventListener extends EventListener {
-
-        public void onReceiveEventOccurred(OnReceiveEvent evt);
-    }
-
-    public interface OnSendEventListener extends EventListener {
-
-        public void onSendEventOccurred(OnSendEvent evt);
-    }
-
-    public interface OnStartEventListener extends EventListener {
-
-        public void onStartEventOccurred(OnStartEvent evt);
-    }
-
-    public interface OnStopEventListener extends EventListener {
-
-        public void onStopEventOccurred(OnStopEvent evt);
-    }
-
     public interface BotCommand {
-
         public String getName();
-
         public boolean run(User user, Channel channel, String data, IrcBot client);
     }
+    
     public static final String RPL_WELCOME = "001";
     public static final String RPL_NAMREPLY = "353";
+    
     private Configuration config;
     private Map<String, Channel> channels = new HashMap<String, Channel>();
     private Map<String, BotCommand> commands = new HashMap<String, BotCommand>();
+    
     private Socket socket = null;
     private PrintWriter out = null;
     private BufferedReader in = null;
@@ -90,44 +47,7 @@ public class IrcBot implements Runnable {
     public IrcBot(Configuration config) {
         this.config = config;
     }
-
-    public void connect() throws UnknownHostException, IOException {
-        this.socket = new Socket(this.getConfig().getHost(), this.getConfig().getPort());
-        this.out = new PrintWriter(this.socket.getOutputStream(), true);
-        this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-    }
-
-    public void disconnect() throws IOException {
-        this.sendData("QUIT");
-        try {
-            this.out.close();
-        } catch (Exception e) {
-            this.log(e.getMessage());
-        } finally {
-            try {
-                this.in.close();
-            } catch (Exception e) {
-                this.log(e.getMessage());
-            } finally {
-                try {
-                    this.socket.close();
-                } catch (Exception e) {
-                    this.log(e.getMessage());
-                }
-            }
-        }
-    }
-
-    public void login() {
-        if (this.getConfig().getPass() != null) {
-            this.sendData("PASS", this.getConfig().getPass());
-        }
-
-        // 0 = default, 8 = invisible
-        this.sendData("USER", this.getConfig().getNick() + " 0 * :" + this.getConfig().getName());
-        this.sendData("NICK", this.getConfig().getNick());
-    }
-
+    
     @Override
     public void run() {
         // connect
@@ -161,107 +81,17 @@ public class IrcBot implements Runnable {
                         String content = dataParts.length > 3 ? dataParts[3].substring(1).trim() : null;
 
                         if ("JOIN".equals(command)) {
-                            // JOIN
-                            try {
-                                String name = nickname.substring(1, nickname.indexOf("!"));
-                                
-                                User user = new User();
-                                user.setNick(name);
-                                
-                                Channel channel = this.getChannels().get(target);
-                                channel.addUser(user);
-                            } catch (Exception e) {
-                            }
+                            this.handleJoin(nickname, command, target, content);
                         } else if ("MODE".equals(command)) {
-                            // MODE
-                            try {
-                                String mode = content.substring(0, content.indexOf(" ")).trim();
-                                String name = content.substring(content.indexOf(" ") + 1).trim();
-
-                                Channel channel = this.getChannels().get(target);
-
-                                // add OP
-                                if ("+o".equals(mode)) {
-                                    channel.getUser(name).setOperator(true);
-                                } // remove OP
-                                else if ("-o".equals(mode)) {
-                                    channel.getUser(name).setOperator(false);
-                                }
-                            } catch (Exception e2) {
-                                this.log(e2.getMessage());
-                            }
+                            this.handleMode(nickname, command, target, content);
                         } else if ("PART".equals(command)) {
-                                String name = nickname.substring(1, nickname.indexOf("!"));
-                                
-                                Channel channel = this.getChannels().get(target);
-                                channel.removeUser(name);
+                            this.handlePart(nickname, command, target, content);
                         } else if ("PRIVMSG".equals(command)) {
-                            // PRIVMSG
-                            Channel channel = this.getChannels().get(target);
-
-                            if (content != null & !content.isEmpty()) {
-                                String[] messageParts = content.split(" ", 2);
-                                String botCommand = messageParts.length > 0 ? messageParts[0].trim() : null;
-                                String botParameter = messageParts.length > 1 ? messageParts[1].trim() : null;
-                                String name = nickname.substring(1, nickname.indexOf("!"));
-
-                                User user = null;
-                                if (channel != null) {
-                                    user = channel.getUser(name);
-                                } else {
-                                    user = new User();
-                                    user.setNick(name);
-                                }
-
-                                // lookup command
-                                BotCommand botCommandInstance = this.commands.get(botCommand);
-                                if (botCommandInstance != null) {
-                                    _continue = botCommandInstance.run(user, channel, botParameter, this);
-                                } else {
-                                    // default command
-                                    if (botCommand.startsWith("!") && channel != null) {
-                                        for (int i = 0; i < this.getConfig().getTriggers().size(); i++) {
-                                            if (this.getConfig().getTriggers().get(i).getTrigger().equalsIgnoreCase(botCommand)) {
-                                                this.log("trigger in " + channel.getName() + ": " + botCommand);
-                                                this.sendMessage(channel.getName(), this.getConfig().getTriggers().get(i).getMessage());
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            this.handlePrivMsg(nickname, command, target, content);
                         } else if (RPL_NAMREPLY.equals(command)) {
-                            // NAMELIST
-                            try {
-                                String channelName = content.substring(0, content.indexOf(":")).trim();
-                                String namelist = content.substring(content.indexOf(":") + 1).trim();
-                                String[] names = namelist.split(" ");
-
-                                Channel channel = this.getChannels().get(channelName);
-                                channel.setJoined(true);
-
-                                // reset users
-                                channel.setUsers(new HashMap<String, User>());
-
-                                // add users
-                                for (String _nickname : names) {
-                                    User user = new User();
-                                    if (_nickname.startsWith("@")) {
-                                        user.setNick(_nickname.substring(1));
-                                        user.setOperator(true);
-                                    } else {
-                                        user.setNick(_nickname);
-                                    }
-                                    channel.addUser(user);
-                                }
-                            } catch (Exception e2) {
-                                this.log(e2.getMessage());
-                            }
+                            this.handleRplNamereply(nickname, command, target, content);
                         } else if (RPL_WELCOME.equals(command)) {
-                            // Welcome message
-                            for (String channel : this.getConfig().getChannels()) {
-                                this.joinChannel(channel);
-                            }
+                            this.handleRplWelcome(nickname, command, target, content);
                         }
                     }
                 }
@@ -283,9 +113,53 @@ public class IrcBot implements Runnable {
         } catch (IOException e) {
             this.log(e.getMessage());
         }
+        
         this.fireOnStopEvent(new OnStopEvent(this));
     }
+    
+    /*
+     * Connection Handling
+     */
+    
+    private void connect() throws UnknownHostException, IOException {
+        this.socket = new Socket(this.getConfig().getHost(), this.getConfig().getPort());
+        this.out = new PrintWriter(this.socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+    }
 
+    public void disconnect() throws IOException {
+        if (this.socket.isConnected()) {
+            this.sendData("QUIT");
+            try {
+                this.out.close();
+            } catch (Exception e) {
+                this.log(e.getMessage());
+            } finally {
+                try {
+                    this.in.close();
+                } catch (Exception e) {
+                    this.log(e.getMessage());
+                } finally {
+                    try {
+                        this.socket.close();
+                    } catch (Exception e) {
+                        this.log(e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    public void login() {
+        if (this.getConfig().getPass() != null) {
+            this.sendData("PASS", this.getConfig().getPass());
+        }
+
+        // 0 = default, 8 = invisible
+        this.sendData("USER", this.getConfig().getNick() + " 0 * :" + this.getConfig().getName());
+        this.sendData("NICK", this.getConfig().getNick());
+    }
+    
     public void sendData(String cmd, String data) {
         this.sendData(cmd.trim() + " " + data.trim());
     }
@@ -300,15 +174,164 @@ public class IrcBot implements Runnable {
         this.sendData("PRIVMSG", target.trim() + " :" + message.trim());
     }
 
+    /*
+     * IRC Command Handler
+     */
+    
+    //<editor-fold defaultstate="collapsed" desc="IRC Command Handler">
+    private boolean handleJoin(String nickname, String command, String target, String content) {
+        try {
+            String name = nickname.substring(1, nickname.indexOf("!"));
+            
+            User user = new User();
+            user.setNick(name);
+            
+            Channel channel = this.getChannels().get(target);
+            channel.addUser(user);
+        } catch (Exception e) {
+            this.log(e.getMessage());
+        }
+        
+        return true;
+    }
+    
+    private boolean handleMode(String nickname, String command, String target, String content) {
+        try {
+            String mode = content.substring(0, content.indexOf(" ")).trim();
+            String name = content.substring(content.indexOf(" ") + 1).trim();
+            
+            Channel channel = this.getChannels().get(target);
+            
+            // add OP
+            if ("+o".equals(mode)) {
+                channel.getUser(name).setOperator(true);
+            }
+            
+            // remove OP
+            else if ("-o".equals(mode)) {
+                channel.getUser(name).setOperator(false);
+            }
+        } catch (Exception e) {
+            this.log(e.getMessage());
+        }
+        
+        return true;
+    }
+    
+    private boolean handlePart(String nickname, String command, String target, String content) {
+        String name = nickname.substring(1, nickname.indexOf("!"));
+        
+        Channel channel = this.getChannels().get(target);
+        channel.removeUser(name);
+        
+        return true;
+    }
+    
+    private boolean handlePrivMsg(String nickname, String command, String target, String content) {
+        boolean _continue = true;
+        
+        try {
+            Channel channel = this.getChannels().get(target);
+            
+            if (content != null & !content.isEmpty()) {
+                String[] messageParts = content.split(" ", 2);
+                String botCommand = messageParts.length > 0 ? messageParts[0].trim() : null;
+                String botParameter = messageParts.length > 1 ? messageParts[1].trim() : null;
+                String name = nickname.substring(1, nickname.indexOf("!"));
+                
+                User user = null;
+                if (channel != null) {
+                    user = channel.getUser(name);
+                } else {
+                    user = new User();
+                    user.setNick(name);
+                }
+                
+                // lookup command
+                BotCommand botCommandInstance = this.commands.get(botCommand);
+                if (botCommandInstance != null) {
+                    _continue = botCommandInstance.run(user, channel, botParameter, this);
+                } else {
+                    // default command
+                    if (botCommand.startsWith("!") && channel != null) {
+                        for (int i = 0; i < this.getConfig().getTriggers().size(); i++) {
+                            if (this.getConfig().getTriggers().get(i).getTrigger().equalsIgnoreCase(botCommand)) {
+                                this.log("trigger in " + channel.getName() + ": " + botCommand);
+                                this.sendMessage(channel.getName(), this.getConfig().getTriggers().get(i).getMessage());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            this.log(e.getMessage());
+        }
+        
+        return _continue;
+    }
+    
+    private boolean handleRplNamereply(String nickname, String command, String target, String content) {
+        try {
+            String channelName = content.substring(0, content.indexOf(":")).trim();
+            String namelist = content.substring(content.indexOf(":") + 1).trim();
+            String[] names = namelist.split(" ");
+            
+            Channel channel = this.getChannels().get(channelName);
+            channel.setJoined(true);
+            
+            // reset users
+            channel.setUsers(new HashMap<String, User>());
+            
+            // add users
+            for (String _nickname : names) {
+                User user = new User();
+                if (_nickname.startsWith("@")) {
+                    user.setNick(_nickname.substring(1));
+                    user.setOperator(true);
+                } else {
+                    user.setNick(_nickname);
+                }
+                channel.addUser(user);
+            }
+        } catch (Exception e) {
+            this.log(e.getMessage());
+        }
+        
+        return true;
+    }
+    
+    private boolean handleRplWelcome(String nickname, String command, String target, String content) {
+        for (String channel : this.getConfig().getChannels()) {
+            this.joinChannel(channel);
+        }
+        return true;
+    }
+    //</editor-fold>
+    
+    /*
+     * Misc
+     */
+    
     public void log(String string) {
         this.fireOnLogEvent(new OnLogEvent(this, string));
     }
 
+    public boolean isAdmin(String name) {
+        return this.getConfig().getAdmins().contains(name);
+    }
+    
+    public void addBotCommand(BotCommand botCommand) {
+        this.commands.put(botCommand.getName(), botCommand);
+    }
+    
     /*
      * Channel Management
      */
+    
     public void joinChannel(String name) {
         Channel channel = null;
+        
         if (!this.channels.containsKey(name)) {
             channel = new Channel();
             channel.setName(name);
@@ -316,6 +339,7 @@ public class IrcBot implements Runnable {
         } else {
             channel = this.getChannels().get(name);
         }
+        
         this.sendData("JOIN", channel.getName());
     }
 
@@ -323,25 +347,53 @@ public class IrcBot implements Runnable {
         if (this.getChannels().containsKey(name)) {
             this.getChannels().remove(name);
         }
+        
         this.sendData("PART", name);
     }
-
-    public boolean isAdmin(String name) {
-        return this.getConfig().getAdmins().contains(name);
+    
+    /*
+     * Getter
+     */
+        
+    //<editor-fold defaultstate="collapsed" desc="Getter">
+    /**
+     * @return the channels
+     */
+    public Map<String, Channel> getChannels() {
+        return channels;
     }
+    
+    /**
+     * @return the config
+     */
+    public Configuration getConfig() {
+        return config;
+    }
+    //</editor-fold>
+    
+    /*
+     * Events
+     */
+    
+    //<editor-fold defaultstate="collapsed" desc="OnLogEvent">
     /*
      * OnLogEvent
      */
+    
+    public interface OnLogEventListener extends EventListener {
+        public void onLogEventOccurred(OnLogEvent evt);
+    }
+    
     protected EventListenerList onLogListenerList = new EventListenerList();
-
+    
     public void addOnLogEventListener(OnLogEventListener listener) {
         this.onLogListenerList.add(OnLogEventListener.class, listener);
     }
-
+    
     public void removeOnLogEventListener(OnLogEventListener listener) {
         this.onLogListenerList.remove(OnLogEventListener.class, listener);
     }
-
+    
     private void fireOnLogEvent(OnLogEvent evt) {
         Object[] listeners = this.onLogListenerList.getListenerList();
         for (int i = 0; i < listeners.length; i += 2) {
@@ -350,19 +402,27 @@ public class IrcBot implements Runnable {
             }
         }
     }
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="OnReceiveEvent">
     /*
      * OnReceiveEvent
      */
+    
+    public interface OnReceiveEventListener extends EventListener {
+        public void onReceiveEventOccurred(OnReceiveEvent evt);
+    }
+    
     protected EventListenerList onReceiveListenerList = new EventListenerList();
-
+    
     public void addOnReceiveEventListener(OnReceiveEventListener listener) {
         this.onReceiveListenerList.add(OnReceiveEventListener.class, listener);
     }
-
+    
     public void removeOnReceiveEventListener(OnReceiveEventListener listener) {
         this.onReceiveListenerList.remove(OnReceiveEventListener.class, listener);
     }
-
+    
     private void fireOnReceiveEvent(OnReceiveEvent evt) {
         Object[] listeners = this.onReceiveListenerList.getListenerList();
         for (int i = 0; i < listeners.length; i += 2) {
@@ -371,19 +431,27 @@ public class IrcBot implements Runnable {
             }
         }
     }
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="OnSendEvent">
     /*
      * OnSendEvent
      */
+    
+    public interface OnSendEventListener extends EventListener {
+        public void onSendEventOccurred(OnSendEvent evt);
+    }
+    
     protected EventListenerList onSendEventListenerList = new EventListenerList();
-
+    
     public void addOnSendEventListener(OnSendEventListener listener) {
         this.onSendEventListenerList.add(OnSendEventListener.class, listener);
     }
-
+    
     public void removeOnSendEventListener(OnSendEventListener listener) {
         this.onSendEventListenerList.remove(OnSendEventListener.class, listener);
     }
-
+    
     private void fireOnSendEvent(OnSendEvent evt) {
         Object[] listeners = this.onSendEventListenerList.getListenerList();
         for (int i = 0; i < listeners.length; i += 2) {
@@ -392,19 +460,27 @@ public class IrcBot implements Runnable {
             }
         }
     }
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="OnStartEvent">
     /*
      * OnStartEvent
      */
+    
+    public interface OnStartEventListener extends EventListener {
+        public void onStartEventOccurred(OnStartEvent evt);
+    }
+    
     protected EventListenerList onStartEventListenerList = new EventListenerList();
-
+    
     public void addOnStartEventListener(OnStartEventListener listener) {
         this.onStartEventListenerList.add(OnStartEventListener.class, listener);
     }
-
+    
     public void removeOnStartEventListener(OnStartEventListener listener) {
         this.onStartEventListenerList.remove(OnStartEventListener.class, listener);
     }
-
+    
     private void fireOnStartEvent(OnStartEvent evt) {
         Object[] listeners = this.onStartEventListenerList.getListenerList();
         for (int i = 0; i < listeners.length; i += 2) {
@@ -413,19 +489,28 @@ public class IrcBot implements Runnable {
             }
         }
     }
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="OnStopEvent">
+    
     /*
      * OnStopEvent
      */
+    
+    public interface OnStopEventListener extends EventListener {
+        public void onStopEventOccurred(OnStopEvent evt);
+    }
+    
     protected EventListenerList onStopEventListenerList = new EventListenerList();
-
+    
     public void addOnStopEventListener(OnStopEventListener listener) {
         this.onStopEventListenerList.add(OnStopEventListener.class, listener);
     }
-
+    
     public void removeOnStopEventListener(OnStopEventListener listener) {
         this.onStopEventListenerList.remove(OnStopEventListener.class, listener);
     }
-
+    
     private void fireOnStopEvent(OnStopEvent evt) {
         Object[] listeners = this.onStopEventListenerList.getListenerList();
         for (int i = 0; i < listeners.length; i += 2) {
@@ -434,4 +519,5 @@ public class IrcBot implements Runnable {
             }
         }
     }
+    //</editor-fold>
 }
