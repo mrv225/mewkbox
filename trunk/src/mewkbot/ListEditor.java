@@ -122,7 +122,18 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
         this.buttonEdit.setEnabled(false);
         this.buttonRemove.setEnabled(false);
     }
+    
+    /**
+     * 
+     */
+    public void clearRows() {
+        DefaultTableModel model = (DefaultTableModel) this.tableData.getModel();
+        model.setRowCount(0);
 
+        this.buttonEdit.setEnabled(false);
+        this.buttonRemove.setEnabled(false);
+    }
+    
     /**
      * 
      * @return the entityName

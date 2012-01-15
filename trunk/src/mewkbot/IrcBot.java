@@ -33,6 +33,8 @@ public class IrcBot implements Runnable {
 
     public static final String RPL_WELCOME = "001";
     public static final String RPL_NAMREPLY = "353";
+    //TODO
+    public static final String ERR_NICKNAMEINUSE = "433";
     
     private Configuration config;
     private Map<String, Channel> channels = new HashMap<String, Channel>();
@@ -48,6 +50,8 @@ public class IrcBot implements Runnable {
     
     @Override
     public void run() {
+        this.channels = new HashMap<String, Channel>();
+        
         // connect
         try {
             this.connect();
@@ -148,7 +152,7 @@ public class IrcBot implements Runnable {
     }
 
     public void login() {
-        if (this.getConfig().getPass() != null) {
+        if (!this.getConfig().getPass().trim().equals("")) {
             this.sendData("PASS", this.getConfig().getPass());
         }
 
@@ -336,8 +340,11 @@ public class IrcBot implements Runnable {
             channel = new Channel();
             channel.setName(name);
             this.getChannels().put(name, channel);
-            this.config.getChannels().add(name);
-            this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
+            
+            if (!this.config.getChannels().contains(name)) {
+                this.config.getChannels().add(name);
+                this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
+            }
         } else {
             channel = this.getChannels().get(name);
         }
@@ -348,14 +355,11 @@ public class IrcBot implements Runnable {
     public void partChannel(String name) {
         if (this.getChannels().containsKey(name)) {
             this.getChannels().remove(name);
-            for (int i = 0; i < this.config.getChannels().size(); i++) {
-                if (this.config.getChannels().get(i).equals(name)) {
-                    this.config.getChannels().remove(i);
-                    break;
-                }
-                
+            
+            if (this.config.getChannels().contains(name)) {
+                this.config.getChannels().remove(name);
+                this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
             }
-            this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
         }
         
         this.sendData("PART", name);
