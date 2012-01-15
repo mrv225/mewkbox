@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
  */
 public class MineQueryClient {
 
+    //TODO
     public static String[] query(String address, int port, int timeout) throws SocketTimeoutException {
         byte[] buffer = new byte[256];
         Socket socket = null;
