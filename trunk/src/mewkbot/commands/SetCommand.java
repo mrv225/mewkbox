@@ -5,6 +5,7 @@ import mewkbot.ICommand;
 import mewkbot.entities.Channel;
 import mewkbot.entities.Trigger;
 import mewkbot.entities.User;
+import mewkbot.events.OnConfigChangeEvent;
 
 /**
  *
@@ -36,7 +37,10 @@ public class SetCommand implements ICommand {
 
             if (!_replaced) {
                 client.getConfig().getTriggers().add(new Trigger(channel.getName(), name, message));
+                
             }
+            
+            client.fireOnConfigChangeEvent(new OnConfigChangeEvent(client));
         }
         
         return true;
