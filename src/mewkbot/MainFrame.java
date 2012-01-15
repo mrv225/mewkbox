@@ -5,6 +5,8 @@ import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.UIManager;
 import mewkbot.commands.*;
 import mewkbot.listeners.*;
@@ -32,9 +34,14 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             
         initComponents();
         
-        this.listEditorAdmins.addColumn("Name");
-        this.listEditorChannels.addColumn("Name");
+        this.listEditorAdmins.addColumns(new String[] { "Name" });
+        this.listEditorAdmins.setEntityName("Admin");
+        
+        this.listEditorChannels.addColumns(new String[] { "Name" });
+        this.listEditorChannels.setEntityName("Channel");
+        
         this.listEditorTriggers.addColumns(new String[] { "Channel", "Trigger", "Message" });
+        this.listEditorTriggers.setEntityName("Trigger");
     }
 
     private void startBot() {
@@ -78,7 +85,28 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     }
     
     private void config2Gui() {
+        // load admins
+        List<String[]> rowsAdmin = new ArrayList<String[]>();
+        for (String admin : this.configuration.getAdmins()) {
+            rowsAdmin.add(new String[] { admin });
+        }
+        this.listEditorAdmins.addRows(rowsAdmin);
         
+        
+        // load channels
+        List<String[]> rowsChannel = new ArrayList<String[]>();
+        for (String channel : this.configuration.getChannels()) {
+            rowsChannel.add(new String[] { channel });
+        }
+        this.listEditorChannels.addRows(rowsChannel);
+        
+        
+        // load triggers
+        List<String[]> rowsTrigger = new ArrayList<String[]>();
+        for (Trigger trigger : this.configuration.getTriggers()) {
+            rowsTrigger.add(new String[] { trigger.getChannel(), trigger.getTrigger(), trigger.getMessage() });
+        }
+        this.listEditorTriggers.addRows(rowsTrigger);
     }
     
     private void gui2Config() {
