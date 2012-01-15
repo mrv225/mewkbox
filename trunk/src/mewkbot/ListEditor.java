@@ -16,6 +16,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -23,26 +25,22 @@ import javax.swing.table.TableColumn;
  *
  * @author Mewes
  */
-public class ListEditor extends javax.swing.JPanel {
+public class ListEditor extends javax.swing.JPanel implements ListSelectionListener {
 
     private String entityName = "";
 
     public ListEditor() {
         this.initComponents();
-    }
 
-    public void addColumn(String title) {
-        TableColumn column = new TableColumn();
-        column.setHeaderValue(title);
-        this.tableData.addColumn(column);
-        this.tableData.doLayout();
+        this.tableData.getSelectionModel().addListSelectionListener(this);
     }
 
     public void addColumns(String[] titles) {
+        DefaultTableModel model = (DefaultTableModel) this.tableData.getModel();
         for (int i = 0; i < titles.length; i++) {
             TableColumn column = new TableColumn();
             column.setHeaderValue(titles[i]);
-            this.tableData.addColumn(column);
+            model.addColumn(titles[i]);
         }
         this.tableData.doLayout();
     }
@@ -139,6 +137,18 @@ public class ListEditor extends javax.swing.JPanel {
         this.entityName = entityName;
     }
 
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        if (e.getSource() == this.tableData.getSelectionModel() && this.tableData.getRowSelectionAllowed() && e.getValueIsAdjusting()) {
+            int first = e.getFirstIndex();
+            int last = e.getLastIndex();
+            System.out.println("Column " + first + ":" + last);
+            
+            this.buttonEdit.setEnabled(true);
+            this.buttonRemove.setEnabled(true);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -214,23 +224,21 @@ public class ListEditor extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
 private void buttonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAddActionPerformed
-    String[] data = TableInputOptionPane.showInputDialog("Add " + this.entityName, this, this.tableData, false);
+    String[] data = TableInputOptionPane.showInputDialog("Add " + this.entityName, this, this.tableData);
     for (int i = 0; i < data.length; i++) {
         System.out.println(data[i]);
     }
 }//GEN-LAST:event_buttonAddActionPerformed
 
 private void buttonEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonEditActionPerformed
-    String[] data = TableInputOptionPane.showInputDialog("Edit " + this.entityName, this, this.tableData, true);
+    String[] data = TableInputOptionPane.showInputDialog("Edit " + this.entityName, this, this.tableData, 0);
     for (int i = 0; i < data.length; i++) {
         System.out.println(data[i]);
     }
 }//GEN-LAST:event_buttonEditActionPerformed
 
 private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveActionPerformed
-    
 }//GEN-LAST:event_buttonRemoveActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAdd;
     private javax.swing.JButton buttonEdit;
@@ -239,9 +247,13 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     private javax.swing.JTable tableData;
     // End of variables declaration//GEN-END:variables
 
-    static class TableInputOptionPane extends JOptionPane {
+    private static class TableInputOptionPane extends JOptionPane {
 
-        public static String[] showInputDialog(String title, JComponent parent, JTable table, boolean fillTextFields) {
+        public static String[] showInputDialog(String title, JComponent parent, JTable table) {
+            return TableInputOptionPane.showInputDialog(title, parent, table, -1);
+        }
+        
+        public static String[] showInputDialog(String title, JComponent parent, JTable table, int rowIndex) {
 
             class GetData extends JDialog implements ActionListener {
 
@@ -257,7 +269,7 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                  * @param parent 
                  * @param table 
                  */
-                public GetData(String title, JComponent parent, JTable table) {
+                public GetData(String title, JComponent parent, JTable table, int rowIndex) {
                     int columnCount = table.getColumnCount();
 
                     this.data = new String[columnCount];
@@ -285,6 +297,9 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                         panelGrid.add(new JLabel(columnName));
 
                         this.textFields[i] = new JTextField();
+                        if (rowIndex >= 0) {
+                            this.textFields[i].setText(title);
+                        }
                         panelGrid.add(this.textFields[i]);
                     }
 
@@ -386,7 +401,7 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                     pCons.setConstraint(SpringLayout.SOUTH, y);
                     pCons.setConstraint(SpringLayout.EAST, x);
                 }
-                
+
                 /* 
                  * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
                  * 
@@ -402,7 +417,7 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                 }
             }
 
-            return new GetData(title, parent, table).getData();
+            return new GetData(title, parent, table, rowIndex).getData();
         }
     }
 }
