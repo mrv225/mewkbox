@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -119,6 +118,9 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
     public void removeRow(int index) {
         DefaultTableModel model = (DefaultTableModel) this.tableData.getModel();
         model.removeRow(index);
+
+        this.buttonEdit.setEnabled(false);
+        this.buttonRemove.setEnabled(false);
     }
 
     /**
@@ -140,10 +142,6 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
     @Override
     public void valueChanged(ListSelectionEvent e) {
         if (e.getSource() == this.tableData.getSelectionModel() && this.tableData.getRowSelectionAllowed() && e.getValueIsAdjusting()) {
-            int first = e.getFirstIndex();
-            int last = e.getLastIndex();
-            System.out.println("Column " + first + ":" + last);
-            
             this.buttonEdit.setEnabled(true);
             this.buttonRemove.setEnabled(true);
         }
@@ -156,7 +154,7 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
         buttonAdd = new javax.swing.JButton();
         buttonEdit = new javax.swing.JButton();
         buttonRemove = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        scrollPaneData = new javax.swing.JScrollPane();
         tableData = new javax.swing.JTable();
 
         buttonAdd.setText("Add");
@@ -190,7 +188,8 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
 
             }
         ));
-        jScrollPane1.setViewportView(tableData);
+        tableData.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        scrollPaneData.setViewportView(tableData);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -199,7 +198,7 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
+                    .addComponent(scrollPaneData, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(buttonAdd)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -212,7 +211,7 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
+                .addComponent(scrollPaneData, javax.swing.GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -225,35 +224,42 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
 
 private void buttonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAddActionPerformed
     String[] data = TableInputOptionPane.showInputDialog("Add " + this.entityName, this, this.tableData);
-    for (int i = 0; i < data.length; i++) {
-        System.out.println(data[i]);
+    if (data != null) {
+        this.addRow(data);
     }
 }//GEN-LAST:event_buttonAddActionPerformed
 
 private void buttonEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonEditActionPerformed
-    String[] data = TableInputOptionPane.showInputDialog("Edit " + this.entityName, this, this.tableData, 0);
-    for (int i = 0; i < data.length; i++) {
-        System.out.println(data[i]);
+    int selectedRow = this.tableData.getSelectedRow();
+    if (selectedRow >= 0) {
+        String[] data = TableInputOptionPane.showInputDialog("Edit " + this.entityName, this, this.tableData, selectedRow);
+        if (data != null) {
+            this.setRow(selectedRow, data);
+        }
     }
 }//GEN-LAST:event_buttonEditActionPerformed
 
 private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveActionPerformed
+    int selectedRow = this.tableData.getSelectedRow();
+    if (selectedRow >= 0) {
+        this.removeRow(selectedRow);
+    }
 }//GEN-LAST:event_buttonRemoveActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAdd;
     private javax.swing.JButton buttonEdit;
     private javax.swing.JButton buttonRemove;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane scrollPaneData;
     private javax.swing.JTable tableData;
     // End of variables declaration//GEN-END:variables
 
     private static class TableInputOptionPane extends JOptionPane {
 
-        public static String[] showInputDialog(String title, JComponent parent, JTable table) {
+        public static String[] showInputDialog(String title, ListEditor parent, JTable table) {
             return TableInputOptionPane.showInputDialog(title, parent, table, -1);
         }
-        
-        public static String[] showInputDialog(String title, JComponent parent, JTable table, int rowIndex) {
+
+        public static String[] showInputDialog(String title, ListEditor parent, JTable table, int rowIndex) {
 
             class GetData extends JDialog implements ActionListener {
 
@@ -269,10 +275,9 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                  * @param parent 
                  * @param table 
                  */
-                public GetData(String title, JComponent parent, JTable table, int rowIndex) {
+                public GetData(String title, ListEditor parent, JTable table, int rowIndex) {
                     int columnCount = table.getColumnCount();
 
-                    this.data = new String[columnCount];
                     this.textFields = new JTextField[columnCount];
 
                     this.table = table;
@@ -291,6 +296,11 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                     layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup().addComponent(buttonOk).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED).addComponent(buttonCancel)).addComponent(panelGrid, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)).addContainerGap()));
                     layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(panelGrid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(buttonCancel).addComponent(buttonOk)).addContainerGap()));
 
+                    String[] rowData = null;
+                    if (rowIndex >= 0) {
+                        rowData = parent.getRow(rowIndex);
+                    }
+
                     for (int i = 0; i < columnCount; i++) {
                         String columnName = (String) table.getColumnModel().getColumn(i).getHeaderValue();
 
@@ -298,7 +308,7 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
 
                         this.textFields[i] = new JTextField();
                         if (rowIndex >= 0) {
-                            this.textFields[i].setText(title);
+                            this.textFields[i].setText(rowData[i]);
                         }
                         panelGrid.add(this.textFields[i]);
                     }
@@ -317,11 +327,15 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                 public void actionPerformed(ActionEvent ae) {
                     if (ae.getSource() == this.buttonOk) {
                         int columnCount = table.getColumnCount();
+                        this.data = new String[columnCount];
                         for (int i = 0; i < columnCount; i++) {
                             this.data[i] = this.textFields[i].getText();
                         }
+                    } else {
+                        this.data = null;
                     }
-                    dispose();
+                    
+                    this.dispose();
                 }
 
                 /**
@@ -329,7 +343,7 @@ private void buttonRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                  * @return data
                  */
                 public String[] getData() {
-                    return data;
+                    return this.data;
                 }
 
                 /**

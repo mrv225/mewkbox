@@ -13,10 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.event.EventListenerList;
 import mewkbot.entities.Channel;
+import mewkbot.events.OnConfigChangeEvent;
 import mewkbot.events.OnLogEvent;
 import mewkbot.events.OnSendEvent;
 import mewkbot.events.OnStartEvent;
 import mewkbot.events.OnStopEvent;
+import mewkbot.listeners.OnConfigChangeEventListener;
 import mewkbot.listeners.OnLogEventListener;
 import mewkbot.listeners.OnReceiveEventListener;
 import mewkbot.listeners.OnSendEventListener;
@@ -65,7 +67,7 @@ public class IrcBot implements Runnable {
 
                 if (data != null) {
                     // fire event
-                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
+//                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
 
                     String[] dataParts = data.split(" ", 4);
 
@@ -334,6 +336,8 @@ public class IrcBot implements Runnable {
             channel = new Channel();
             channel.setName(name);
             this.getChannels().put(name, channel);
+            this.config.getChannels().add(name);
+            this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
         } else {
             channel = this.getChannels().get(name);
         }
@@ -344,6 +348,14 @@ public class IrcBot implements Runnable {
     public void partChannel(String name) {
         if (this.getChannels().containsKey(name)) {
             this.getChannels().remove(name);
+            for (int i = 0; i < this.config.getChannels().size(); i++) {
+                if (this.config.getChannels().get(i).equals(name)) {
+                    this.config.getChannels().remove(i);
+                    break;
+                }
+                
+            }
+            this.fireOnConfigChangeEvent(new OnConfigChangeEvent(this));
         }
         
         this.sendData("PART", name);
@@ -372,6 +384,31 @@ public class IrcBot implements Runnable {
     /*
      * Events
      */
+    
+    //<editor-fold defaultstate="collapsed" desc="OnConfigChangeEvent">
+    /*
+     * OnConfigChangeEvent
+     */
+       
+    protected EventListenerList onConfigChangeEventListenerList = new EventListenerList();
+    
+    public void addOnConfigChangeEventListener(OnConfigChangeEventListener listener) {
+        this.onConfigChangeEventListenerList.add(OnConfigChangeEventListener.class, listener);
+    }
+    
+    public void removeOnConfigChangeEventListener(OnConfigChangeEventListener listener) {
+        this.onConfigChangeEventListenerList.remove(OnConfigChangeEventListener.class, listener);
+    }
+    
+    public void fireOnConfigChangeEvent(OnConfigChangeEvent evt) {
+        Object[] listeners = this.onConfigChangeEventListenerList.getListenerList();
+        for (int i = 0; i < listeners.length; i += 2) {
+            if (listeners[i] == OnConfigChangeEventListener.class) {
+                ((OnConfigChangeEventListener) listeners[i + 1]).onConfigChangeEventOccurred(evt);
+            }
+        }
+    }
+    //</editor-fold>    
     
     //<editor-fold defaultstate="collapsed" desc="OnLogEvent">
     /*

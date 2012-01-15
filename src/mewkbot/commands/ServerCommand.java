@@ -15,7 +15,7 @@ public class ServerCommand implements ICommand {
 
     @Override
     public String getName() {
-        return "!join";
+        return "!server";
     }
 
     @Override

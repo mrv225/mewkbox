@@ -1,6 +1,5 @@
 package mewkbot;
 
-import java.beans.DefaultPersistenceDelegate;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.FileInputStream;
@@ -17,7 +16,7 @@ import mewkbot.events.*;
  *
  * @author Mewes
  */
-public class MainFrame extends javax.swing.JFrame implements OnLogEventListener, OnReceiveEventListener, OnSendEventListener, OnStartEventListener, OnStopEventListener {
+public class MainFrame extends javax.swing.JFrame implements OnConfigChangeEventListener, OnLogEventListener, OnReceiveEventListener, OnSendEventListener, OnStartEventListener, OnStopEventListener {
 
     Configuration configuration = null;
     IrcBot bot = null;
@@ -30,7 +29,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
           System.out.println("Error setting native LAF: " + e);
         }
         
-        this.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/on.png")).getImage());
+        this.setIconImage(new javax.swing.ImageIcon(this.getClass().getResource("/mewkbot/resources/on.png")).getImage());
             
         initComponents();
         
@@ -56,7 +55,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
                 this.botThread.interrupt();
             }
         } catch (Exception e) {
-            textLog.append("ERR: " + e.getMessage() + "\n");
+            this.textLog.append("ERR: " + e.getMessage() + "\n");
         }
     }
     
@@ -67,7 +66,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             this.configuration = (Configuration) e.readObject();
             e.close();
         } catch (Exception e) {
-            textLog.append("ERR: " + e.getMessage() + "\n");
+            this.textLog.append("ERR: " + e.getMessage() + "\n");
             this.configuration = new Configuration();
         }
     }
@@ -80,11 +79,17 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             e.flush();
             e.close();
         } catch (Exception e) {
-            textLog.append("ERR: " + e.getMessage() + "\n");
+            this.textLog.append("ERR: " + e.getMessage() + "\n");
         }
     }
     
     private void config2Gui() {
+        this.textHost.setText(this.configuration.getHost());
+        this.formattedTextPort.setValue(this.configuration.getPort());
+        this.textPassword.setText(this.configuration.getPass());
+        this.textNickname.setText(this.configuration.getNick());
+        this.textUsername.setText(this.configuration.getName());
+        
         // load admins
         List<String[]> rowsAdmin = new ArrayList<String[]>();
         for (String admin : this.configuration.getAdmins()) {
@@ -110,27 +115,65 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     }
     
     private void gui2Config() {
+        // validate port
+        Integer port = (Integer) this.formattedTextPort.getValue();
+        if (port < 0 || port > 65535) {
+            port = this.configuration.getPort();
+            this.formattedTextPort.setValue(port);
+        }
         
+        this.configuration.setHost(this.textHost.getText());
+        this.configuration.setPort(port);
+        this.configuration.setPass(new String(this.textPassword.getPassword()));
+        this.configuration.setNick(this.textNickname.getText());
+        this.configuration.setName(this.textUsername.getText());
+        
+        // save admins
+        List<String> admins = new ArrayList<String>();
+        for (String[] row : this.listEditorAdmins.getRows()) {
+            admins.add(row[0]);
+        }
+        this.configuration.setAdmins(admins);        
+        
+        // save channels
+        List<String> channels = new ArrayList<String>();
+        for (String[] row : this.listEditorChannels.getRows()) {
+            channels.add(row[0]);
+        }
+        this.configuration.setChannels(channels);          
+        
+        // save triggers
+        List<Trigger> triggers = new ArrayList<Trigger>();
+        for (String[] row : this.listEditorTriggers.getRows()) {
+            triggers.add(new Trigger(row[0], row[1], row[2]));
+        }
+        this.configuration.setTriggers(triggers);
+    }
+    
+
+    @Override
+    public void onConfigChangeEventOccurred(OnConfigChangeEvent evt) {
+        this.gui2Config();
     }
     
     @Override
     public void onLogEventOccurred(OnLogEvent evt) {
         String data = evt.getData();
         if (data != null) {
-            textLog.append("LOG: " + data.trim() + "\n");
+            this.textLog.append("LOG: " + data.trim() + "\n");
         }
     }
 
     @Override
     public void onReceiveEventOccurred(OnReceiveEvent evt) {
         String data = "IN:  " + evt.getData().trim() + "\n";
-        textLog.append(data);
+        this.textLog.append(data);
     }
 
     @Override
     public void onSendEventOccurred(OnSendEvent evt) {
         String data = "OUT: " + evt.getData().trim() + "\n";
-        textLog.append(data);
+        this.textLog.append(data);
     }
 
     @Override
@@ -151,28 +194,25 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        tabPaneMain = new javax.swing.JTabbedPane();
+        scrollPaneLog = new javax.swing.JScrollPane();
         textLog = new javax.swing.JTextArea();
-        jTabbedPane2 = new javax.swing.JTabbedPane();
-        jPanel1 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jTextField3 = new javax.swing.JTextField();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
-        jTextField4 = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        jTextField5 = new javax.swing.JTextField();
-        jPanel3 = new javax.swing.JPanel();
-        listEditorChannels = new mewkbot.ListEditor();
-        jPanel4 = new javax.swing.JPanel();
-        listEditorTriggers = new mewkbot.ListEditor();
-        jPanel5 = new javax.swing.JPanel();
+        tabPaneConfiguration = new javax.swing.JTabbedPane();
+        panelServer = new javax.swing.JPanel();
+        labelHost = new javax.swing.JLabel();
+        textHost = new javax.swing.JTextField();
+        labelPort = new javax.swing.JLabel();
+        formattedTextPort = new javax.swing.JFormattedTextField();
+        labelPassword = new javax.swing.JLabel();
+        textPassword = new javax.swing.JPasswordField();
+        panelUser = new javax.swing.JPanel();
+        labelNickname = new javax.swing.JLabel();
+        textNickname = new javax.swing.JTextField();
+        labelUsername = new javax.swing.JLabel();
+        textUsername = new javax.swing.JTextField();
         listEditorAdmins = new mewkbot.ListEditor();
+        listEditorTriggers = new mewkbot.ListEditor();
+        listEditorChannels = new mewkbot.ListEditor();
         buttonStart = new javax.swing.JButton();
         buttonStop = new javax.swing.JButton();
         labelStatusIcon = new javax.swing.JLabel();
@@ -194,128 +234,94 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
         textLog.setColumns(20);
         textLog.setFont(new java.awt.Font("Courier New", 0, 13)); // NOI18N
         textLog.setRows(5);
-        jScrollPane1.setViewportView(textLog);
+        scrollPaneLog.setViewportView(textLog);
 
-        jTabbedPane1.addTab("Log", jScrollPane1);
+        tabPaneMain.addTab("Log", scrollPaneLog);
 
-        jLabel1.setText("Host:");
+        labelHost.setText("Host:");
 
-        jLabel2.setText("Port:");
+        labelPort.setText("Port:");
 
-        jLabel3.setText("Password:");
+        formattedTextPort.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#####"))));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        labelPassword.setText("Password:");
+
+        javax.swing.GroupLayout panelServerLayout = new javax.swing.GroupLayout(panelServer);
+        panelServer.setLayout(panelServerLayout);
+        panelServerLayout.setHorizontalGroup(
+            panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelServerLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextField3, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
+                .addGroup(panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelHost)
+                    .addComponent(labelPort)
+                    .addComponent(labelPassword))
+                .addGap(10, 10, 10)
+                .addGroup(panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textHost, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                    .addComponent(formattedTextPort, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                    .addComponent(textPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        panelServerLayout.setVerticalGroup(
+            panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelServerLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelHost)
+                    .addComponent(textHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelPort)
+                    .addComponent(formattedTextPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelPassword))
                 .addContainerGap(220, Short.MAX_VALUE))
         );
 
-        jTabbedPane2.addTab("Server", jPanel1);
+        tabPaneConfiguration.addTab("Server", panelServer);
 
-        jLabel4.setText("Nickname:");
+        labelNickname.setText("Nickname:");
 
-        jLabel5.setText("Username:");
+        labelUsername.setText("Username:");
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        javax.swing.GroupLayout panelUserLayout = new javax.swing.GroupLayout(panelUser);
+        panelUser.setLayout(panelUserLayout);
+        panelUserLayout.setHorizontalGroup(
+            panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelUserLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5))
+                .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelNickname)
+                    .addComponent(labelUsername))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextField5, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                    .addComponent(jTextField4, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE))
+                .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textUsername, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
+                    .addComponent(textNickname, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE))
                 .addContainerGap())
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        panelUserLayout.setVerticalGroup(
+            panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelUserLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(jTextField4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelNickname)
+                    .addComponent(textNickname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelUsername)
+                    .addComponent(textUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(251, Short.MAX_VALUE))
         );
 
-        jTabbedPane2.addTab("User", jPanel2);
+        tabPaneConfiguration.addTab("User", panelUser);
+        tabPaneConfiguration.addTab("Admins", listEditorAdmins);
+        tabPaneConfiguration.addTab("Triggers", listEditorTriggers);
+        tabPaneConfiguration.addTab("Channels", listEditorChannels);
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorChannels, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorChannels, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
-        );
-
-        jTabbedPane2.addTab("Channels", jPanel3);
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorTriggers, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorTriggers, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
-        );
-
-        jTabbedPane2.addTab("Triggers", jPanel4);
-
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorAdmins, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listEditorAdmins, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
-        );
-
-        jTabbedPane2.addTab("Admins", jPanel5);
-
-        jTabbedPane1.addTab("Config", jTabbedPane2);
+        tabPaneMain.addTab("Config", tabPaneConfiguration);
 
         buttonStart.setText("Start");
         buttonStart.addActionListener(new java.awt.event.ActionListener() {
@@ -341,7 +347,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 423, Short.MAX_VALUE)
+                    .addComponent(tabPaneMain, javax.swing.GroupLayout.DEFAULT_SIZE, 423, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(buttonStart)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -354,7 +360,7 @@ public class MainFrame extends javax.swing.JFrame implements OnLogEventListener,
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
+                .addComponent(tabPaneMain, javax.swing.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -413,29 +419,26 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStop;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel5;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTabbedPane jTabbedPane2;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
-    private javax.swing.JTextField jTextField3;
-    private javax.swing.JTextField jTextField4;
-    private javax.swing.JTextField jTextField5;
+    private javax.swing.JFormattedTextField formattedTextPort;
+    private javax.swing.JLabel labelHost;
+    private javax.swing.JLabel labelNickname;
+    private javax.swing.JLabel labelPassword;
+    private javax.swing.JLabel labelPort;
     private javax.swing.JLabel labelStatusIcon;
+    private javax.swing.JLabel labelUsername;
     private mewkbot.ListEditor listEditorAdmins;
     private mewkbot.ListEditor listEditorChannels;
     private mewkbot.ListEditor listEditorTriggers;
+    private javax.swing.JPanel panelServer;
+    private javax.swing.JPanel panelUser;
+    private javax.swing.JScrollPane scrollPaneLog;
+    private javax.swing.JTabbedPane tabPaneConfiguration;
+    private javax.swing.JTabbedPane tabPaneMain;
+    private javax.swing.JTextField textHost;
     private javax.swing.JTextArea textLog;
+    private javax.swing.JTextField textNickname;
+    private javax.swing.JPasswordField textPassword;
+    private javax.swing.JTextField textUsername;
     // End of variables declaration//GEN-END:variables
 
     public static void main(String args[]) {
