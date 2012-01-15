@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.event.EventListenerList;
@@ -31,14 +32,18 @@ import mewkbot.listeners.OnStopEventListener;
  */
 public class IrcBot implements Runnable {
 
+    public static final int CMD_USER = 1;
+    public static final int CMD_OPERATOR = 2;
+    public static final int CMD_ADMIN = 4;
+    
     public static final String RPL_WELCOME = "001";
     public static final String RPL_NAMREPLY = "353";
-    //TODO
     public static final String ERR_NICKNAMEINUSE = "433";
     
     private Configuration config;
     private Map<String, Channel> channels = new HashMap<String, Channel>();
     private Map<String, ICommand> commands = new HashMap<String, ICommand>();
+    private Map<String, Date> activeCoolDowns = new HashMap<String, Date>();
     
     private Socket socket = null;
     private PrintWriter out = null;
@@ -96,6 +101,8 @@ public class IrcBot implements Runnable {
                             this.handleRplNamereply(nickname, command, target, content);
                         } else if (RPL_WELCOME.equals(command)) {
                             this.handleRplWelcome(nickname, command, target, content);
+                        } else if (ERR_NICKNAMEINUSE.equals(command)) {
+                            this.handleErrNicknameInUse(nickname, command, target, content);
                         }
                     }
                 }
@@ -155,8 +162,8 @@ public class IrcBot implements Runnable {
         }
 
         // 0 = default, 8 = invisible
-        this.sendData("USER", this.getConfig().getNick() + " 0 * :" + this.getConfig().getName());
-        this.sendData("NICK", this.getConfig().getNick());
+        this.sendData("USER", this.getConfig().getNickname() + " 0 * :" + this.getConfig().getNickname());
+        this.sendData("NICK", this.getConfig().getNickname());
     }
     
     public void sendData(String cmd, String data) {
@@ -184,6 +191,9 @@ public class IrcBot implements Runnable {
             
             User user = new User();
             user.setNick(name);
+            if (this.config.getAdmins().contains(name)) {
+                user.setAdmin(true);
+            }
             
             Channel channel = this.getChannels().get(target);
             channel.addUser(user);
@@ -254,14 +264,9 @@ public class IrcBot implements Runnable {
                     _continue = botCommandInstance.run(user, channel, botParameter, this);
                 } else {
                     // default command
-                    if (botCommand.startsWith("!") && channel != null) {
-                        for (int i = 0; i < this.getConfig().getTriggers().size(); i++) {
-                            if (this.getConfig().getTriggers().get(i).getTrigger().equalsIgnoreCase(botCommand)) {
-                                this.log("trigger in " + channel.getName() + ": " + botCommand);
-                                this.sendMessage(channel.getName(), this.getConfig().getTriggers().get(i).getMessage());
-                                break;
-                            }
-                        }
+                    botCommandInstance = this.commands.get("*");
+                    if (botCommandInstance != null) {
+                        _continue = botCommandInstance.run(user, channel, botParameter, this);
                     }
                 }
             }
@@ -290,8 +295,14 @@ public class IrcBot implements Runnable {
                 if (_nickname.startsWith("@")) {
                     user.setNick(_nickname.substring(1));
                     user.setOperator(true);
+                    if (this.config.getAdmins().contains(_nickname.substring(1))) {
+                        user.setAdmin(true);
+                    }
                 } else {
                     user.setNick(_nickname);
+                    if (this.config.getAdmins().contains(_nickname)) {
+                        user.setAdmin(true);
+                    }
                 }
                 channel.addUser(user);
             }
@@ -309,6 +320,13 @@ public class IrcBot implements Runnable {
         
         return true;
     }
+    
+    private boolean handleErrNicknameInUse(String nickname, String command, String target, String content) {
+        if (!this.getConfig().getAltNickname().trim().equals("")) {
+            this.sendData("NICK", this.getConfig().getAltNickname());
+        }
+        return true;
+    }
     //</editor-fold>
     
     /*
@@ -317,10 +335,6 @@ public class IrcBot implements Runnable {
     
     public void log(String string) {
         this.fireOnLogEvent(new OnLogEvent(this, string));
-    }
-
-    public boolean isAdmin(String name) {
-        return this.getConfig().getAdmins().contains(name);
     }
     
     public void addBotCommand(ICommand botCommand) {
@@ -372,14 +386,21 @@ public class IrcBot implements Runnable {
      * @return the channels
      */
     public Map<String, Channel> getChannels() {
-        return channels;
+        return this.channels;
+    }
+    
+    /**
+     * @return the commands
+     */
+    public Map<String, ICommand> getCommands() {
+        return this.commands;
     }
     
     /**
      * @return the config
      */
     public Configuration getConfig() {
-        return config;
+        return this.config;
     }
     //</editor-fold>
     

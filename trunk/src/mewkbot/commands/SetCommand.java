@@ -12,7 +12,12 @@ import mewkbot.events.OnConfigChangeEvent;
  * @author Mewes
  */
 public class SetCommand implements ICommand {
-
+    
+   @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN | IrcBot.CMD_OPERATOR;
+    }
+   
     @Override
     public String getName() {
         return "!set";
@@ -36,7 +41,7 @@ public class SetCommand implements ICommand {
             }
 
             if (!_replaced) {
-                client.getConfig().getTriggers().add(new Trigger(channel.getName(), name, message));
+                client.getConfig().getTriggers().add(new Trigger(channel.getName(), name, message, 0));
                 
             }
             

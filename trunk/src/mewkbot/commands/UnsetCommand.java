@@ -12,6 +12,11 @@ import mewkbot.events.OnConfigChangeEvent;
  */
 public class UnsetCommand implements ICommand {
 
+   @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN | IrcBot.CMD_OPERATOR;
+    }    
+    
     @Override
     public String getName() {
         return "!unset";

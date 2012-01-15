@@ -12,6 +12,11 @@ import mewkbot.entities.User;
 public class JoinCommand implements ICommand {
 
     @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN;
+    }
+    
+    @Override
     public String getName() {
         return "!join";
     }
