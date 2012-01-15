@@ -108,11 +108,7 @@ public class IrcBot implements Runnable {
         }
 
         // disconnect
-        try {
-            this.disconnect();
-        } catch (IOException e) {
-            this.log(e.getMessage());
-        }
+        this.disconnect();
     }
     
     /*
@@ -125,10 +121,12 @@ public class IrcBot implements Runnable {
         this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
     }
 
-    public void disconnect() throws IOException {
-        if (!this.socket.isClosed()) {
+    public void disconnect() {
+        try {
             this.sendData("QUIT");
-            
+        } catch (Exception e) {
+            this.log(e.getMessage());
+        } finally {
             try {
                 this.out.close();
             } catch (Exception e) {
@@ -143,11 +141,11 @@ public class IrcBot implements Runnable {
                         this.socket.close();
                     } catch (Exception e) {
                         this.log(e.getMessage());
+                    } finally {
+                        this.fireOnStopEvent(new OnStopEvent(this));
                     }
                 }
-            }
-            
-            this.fireOnStopEvent(new OnStopEvent(this));
+            }            
         }
     }
 

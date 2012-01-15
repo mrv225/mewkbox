@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import mewkbot.commands.*;
 import mewkbot.listeners.*;
@@ -30,6 +31,9 @@ public class MainFrame
     Configuration configuration = null;
     IrcBot bot = null;
     Thread botThread = null;
+    
+    ImageIcon iconOff = null;
+    ImageIcon iconOn = null;
 
     public MainFrame() {
         try {
@@ -38,7 +42,10 @@ public class MainFrame
           System.out.println("Error setting native LAF: " + e);
         }
         
-        this.setIconImage(new javax.swing.ImageIcon(this.getClass().getResource("/mewkbot/resources/on.png")).getImage());
+        this.iconOff = new javax.swing.ImageIcon(this.getClass().getResource("/mewkbot/resources/off.png"));
+        this.iconOn = new javax.swing.ImageIcon(this.getClass().getResource("/mewkbot/resources/on.png"));
+        
+        this.setIconImage(this.iconOff.getImage());
             
         this.initComponents();
         
@@ -192,14 +199,16 @@ public class MainFrame
     public void onStartEventOccurred(OnStartEvent evt) {
         this.buttonStart.setEnabled(false);
         this.buttonStop.setEnabled(true);
-        this.labelStatusIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/on.png")));
+        this.labelStatusIcon.setIcon(this.iconOn);
+        this.setIconImage(this.iconOn.getImage());
     }
 
     @Override
     public void onStopEventOccurred(OnStopEvent evt) {
         this.buttonStart.setEnabled(true);
         this.buttonStop.setEnabled(false);
-        this.labelStatusIcon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mewkbot/resources/off.png")));
+        this.labelStatusIcon.setIcon(this.iconOff);
+        this.setIconImage(this.iconOff.getImage());
     }
     
     @SuppressWarnings("unchecked")
