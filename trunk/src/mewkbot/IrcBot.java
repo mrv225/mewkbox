@@ -1,8 +1,5 @@
 package mewkbot;
 
-import mewkbot.entities.User;
-import mewkbot.entities.Configuration;
-import mewkbot.events.OnReceiveEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,8 +10,11 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.event.EventListenerList;
 import mewkbot.entities.Channel;
+import mewkbot.entities.Configuration;
+import mewkbot.entities.User;
 import mewkbot.events.OnConfigChangeEvent;
 import mewkbot.events.OnLogEvent;
+import mewkbot.events.OnReceiveEvent;
 import mewkbot.events.OnSendEvent;
 import mewkbot.events.OnStartEvent;
 import mewkbot.events.OnStopEvent;
@@ -67,7 +67,7 @@ public class IrcBot implements Runnable {
 
                 if (data != null) {
                     // fire event
-//                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
+                    this.fireOnReceiveEvent(new OnReceiveEvent(this, data));
 
                     String[] dataParts = data.split(" ", 4);
 

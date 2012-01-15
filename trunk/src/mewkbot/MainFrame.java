@@ -16,7 +16,16 @@ import mewkbot.events.*;
  *
  * @author Mewes
  */
-public class MainFrame extends javax.swing.JFrame implements OnConfigChangeEventListener, OnLogEventListener, OnReceiveEventListener, OnSendEventListener, OnStartEventListener, OnStopEventListener {
+public class MainFrame 
+    extends 
+        javax.swing.JFrame 
+    implements 
+        OnConfigChangeEventListener, 
+        OnLogEventListener, 
+        OnReceiveEventListener, 
+        OnSendEventListener, 
+        OnStartEventListener, 
+        OnStopEventListener {
 
     Configuration configuration = null;
     IrcBot bot = null;
@@ -31,7 +40,7 @@ public class MainFrame extends javax.swing.JFrame implements OnConfigChangeEvent
         
         this.setIconImage(new javax.swing.ImageIcon(this.getClass().getResource("/mewkbot/resources/on.png")).getImage());
             
-        initComponents();
+        this.initComponents();
         
         this.listEditorAdmins.addColumns(new String[] { "Name" });
         this.listEditorAdmins.setEntityName("Admin");
@@ -409,6 +418,7 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     this.bot.addBotCommand(new SetCommand());
     this.bot.addBotCommand(new UnsetCommand());
     
+    this.bot.addOnConfigChangeEventListener(this);
     this.bot.addOnLogEventListener(this);
     this.bot.addOnReceiveEventListener(this);
     this.bot.addOnSendEventListener(this);
