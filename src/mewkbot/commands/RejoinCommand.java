@@ -12,6 +12,11 @@ import mewkbot.entities.User;
  */
 public class RejoinCommand implements ICommand {
 
+   @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN | IrcBot.CMD_OPERATOR;
+    }    
+    
     @Override
     public String getName() {
         return "!rejoin";

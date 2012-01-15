@@ -10,7 +10,12 @@ import mewkbot.entities.User;
  * @author Mewes
  */
 public class QuitCommand implements ICommand {
-
+   
+    @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN;
+    }
+   
     @Override
     public String getName() {
         return "!quit";

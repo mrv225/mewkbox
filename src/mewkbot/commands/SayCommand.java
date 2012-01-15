@@ -10,7 +10,12 @@ import mewkbot.entities.User;
  * @author Mewes
  */
 public class SayCommand implements ICommand {
-
+    
+   @Override
+    public int getRequiredRoles() {
+        return IrcBot.CMD_ADMIN | IrcBot.CMD_OPERATOR;
+    }
+   
     @Override
     public String getName() {
         return "!say";

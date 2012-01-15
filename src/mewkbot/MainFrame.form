@@ -182,7 +182,7 @@
                 <Component class="javax.swing.JFormattedTextField" name="formattedTextPort">
                   <Properties>
                     <Property name="formatterFactory" type="javax.swing.JFormattedTextField$AbstractFormatterFactory" editor="org.netbeans.modules.form.editors.AbstractFormatterFactoryEditor">
-                      <Format format="#####" subtype="-1" type="0"/>
+                      <Format format="#0" subtype="-1" type="0"/>
                     </Property>
                   </Properties>
                 </Component>
@@ -211,12 +211,12 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="labelNickname" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="labelUsername" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelAltNickname" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="textUsername" pref="331" max="32767" attributes="2"/>
-                              <Component id="textNickname" alignment="0" pref="331" max="32767" attributes="2"/>
+                              <Component id="textAltNickname" pref="314" max="32767" attributes="2"/>
+                              <Component id="textNickname" alignment="0" pref="314" max="32767" attributes="2"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -232,8 +232,8 @@
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="labelUsername" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="textUsername" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelAltNickname" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="textAltNickname" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace pref="251" max="32767" attributes="0"/>
                       </Group>
@@ -248,12 +248,12 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="textNickname">
                 </Component>
-                <Component class="javax.swing.JLabel" name="labelUsername">
+                <Component class="javax.swing.JLabel" name="labelAltNickname">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Username:"/>
+                    <Property name="text" type="java.lang.String" value="Alt. Nickname:"/>
                   </Properties>
                 </Component>
-                <Component class="javax.swing.JTextField" name="textUsername">
+                <Component class="javax.swing.JTextField" name="textAltNickname">
                 </Component>
               </SubComponents>
             </Container>
@@ -262,15 +262,6 @@
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
                   <JTabbedPaneConstraints tabName="Admins">
                     <Property name="tabTitle" type="java.lang.String" value="Admins"/>
-                  </JTabbedPaneConstraints>
-                </Constraint>
-              </Constraints>
-            </Component>
-            <Component class="mewkbot.ListEditor" name="listEditorTriggers">
-              <Constraints>
-                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                  <JTabbedPaneConstraints tabName="Triggers">
-                    <Property name="tabTitle" type="java.lang.String" value="Triggers"/>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>
@@ -284,6 +275,91 @@
                 </Constraint>
               </Constraints>
             </Component>
+            <Component class="mewkbot.ListEditor" name="listEditorCommands">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="Commands">
+                    <Property name="tabTitle" type="java.lang.String" value="Commands"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="mewkbot.ListEditor" name="listEditorTriggers">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="Triggers">
+                    <Property name="tabTitle" type="java.lang.String" value="Triggers"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Container class="javax.swing.JPanel" name="panelMcServer">
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="MC Server">
+                    <Property name="tabTitle" type="java.lang.String" value="MC Server"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="labelMcServerHost" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelMcServerPort" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="textMcServerHostname" alignment="0" pref="357" max="32767" attributes="2"/>
+                              <Component id="formattedTextMcServerPort" alignment="0" pref="357" max="32767" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelMcServerHost" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="textMcServerHostname" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelMcServerPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="formattedTextMcServerPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace pref="251" max="32767" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Component class="javax.swing.JLabel" name="labelMcServerHost">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Host:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="textMcServerHostname">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelMcServerPort">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Port:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JFormattedTextField" name="formattedTextMcServerPort">
+                  <Properties>
+                    <Property name="formatterFactory" type="javax.swing.JFormattedTextField$AbstractFormatterFactory" editor="org.netbeans.modules.form.editors.AbstractFormatterFactoryEditor">
+                      <Format format="#0" subtype="-1" type="0"/>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
           </SubComponents>
         </Container>
       </SubComponents>

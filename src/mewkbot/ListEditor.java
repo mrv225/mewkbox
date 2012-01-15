@@ -149,6 +149,20 @@ public class ListEditor extends javax.swing.JPanel implements ListSelectionListe
     public void setEntityName(String entityName) {
         this.entityName = entityName;
     }
+    
+    /**
+     * 
+     * @param editOnly 
+     */
+    public void setEditOnly(boolean editOnly) {
+        if (editOnly) {
+            this.buttonAdd.setVisible(false);
+            this.buttonRemove.setVisible(false);
+        } else {
+            this.buttonAdd.setVisible(true);
+            this.buttonRemove.setVisible(true);
+        }
+    }
 
     @Override
     public void valueChanged(ListSelectionEvent e) {

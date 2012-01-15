@@ -5,7 +5,10 @@ import java.beans.XMLEncoder;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import mewkbot.commands.*;
@@ -28,6 +31,8 @@ public class MainFrame
         OnStartEventListener, 
         OnStopEventListener {
 
+    private static String version = "0.3";
+    
     Configuration configuration = null;
     IrcBot bot = null;
     Thread botThread = null;
@@ -55,7 +60,11 @@ public class MainFrame
         this.listEditorChannels.addColumns(new String[] { "Name" });
         this.listEditorChannels.setEntityName("Channel");
         
-        this.listEditorTriggers.addColumns(new String[] { "Channel", "Trigger", "Message" });
+        this.listEditorCommands.addColumns(new String[] { "Command", "Cooldown" });
+        this.listEditorCommands.setEntityName("Command");
+        this.listEditorCommands.setEditOnly(true);
+        
+        this.listEditorTriggers.addColumns(new String[] { "Channel", "Trigger", "Message", "Cooldown" });
         this.listEditorTriggers.setEntityName("Trigger");
     }
 
@@ -103,8 +112,11 @@ public class MainFrame
         this.textHost.setText(this.configuration.getHost());
         this.formattedTextPort.setValue(this.configuration.getPort());
         this.textPassword.setText(this.configuration.getPass());
-        this.textNickname.setText(this.configuration.getNick());
-        this.textUsername.setText(this.configuration.getName());
+        this.textNickname.setText(this.configuration.getNickname());
+        this.textAltNickname.setText(this.configuration.getAltNickname());
+        
+        this.textMcServerHostname.setText(this.configuration.getMinecraftServerHost());
+        this.formattedTextMcServerPort.setValue(this.configuration.getMinecraftServerPort());
         
         // load admins
         List<String[]> rowsAdmin = new ArrayList<String[]>();
@@ -127,48 +139,98 @@ public class MainFrame
         // load triggers
         List<String[]> rowsTrigger = new ArrayList<String[]>();
         for (Trigger trigger : this.configuration.getTriggers()) {
-            rowsTrigger.add(new String[] { trigger.getChannel(), trigger.getTrigger(), trigger.getMessage() });
+            rowsTrigger.add(new String[] { trigger.getChannel(), trigger.getTrigger(), trigger.getMessage(), trigger.getCoolDown().toString() });
         }
         this.listEditorTriggers.clearRows();
         this.listEditorTriggers.addRows(rowsTrigger);
+        
+        // load commands
+        List<String[]> rowsCommands = new ArrayList<String[]>();
+        for (Entry<String, ICommand> command : this.bot.getCommands().entrySet()) {
+            Integer coolDown = 0;
+            if (this.configuration.getCommandCoolDowns().containsKey(command.getKey())) {
+                coolDown = this.configuration.getCommandCoolDowns().get(command.getKey());
+            }
+            rowsCommands.add(new String[] { command.getKey(), coolDown.toString() });
+        }
+        this.listEditorCommands.clearRows();
+        this.listEditorCommands.addRows(rowsCommands);
     }
     
     private void gui2Config() {
         // validate port
-        Integer port = (Integer) this.formattedTextPort.getValue();
+        Integer port = 0;
+        if (this.formattedTextPort.getValue() instanceof Long) {
+            port = ((Long) this.formattedTextPort.getValue()).intValue();
+        } else if (this.formattedTextPort.getValue() instanceof Integer) {
+            port = (Integer) this.formattedTextPort.getValue();
+        }
         if (port < 0 || port > 65535) {
             port = this.configuration.getPort();
             this.formattedTextPort.setValue(port);
         }
         
+        // validate mc port
+        Integer mcServerPort = 0;
+        if (this.formattedTextMcServerPort.getValue() instanceof Long) {
+            mcServerPort = ((Long) this.formattedTextMcServerPort.getValue()).intValue();
+        } else if (this.formattedTextMcServerPort.getValue() instanceof Integer) {
+            mcServerPort = (Integer) this.formattedTextMcServerPort.getValue();
+        }
+        if (mcServerPort < 0 || mcServerPort > 65535) {
+            mcServerPort = this.configuration.getMinecraftServerPort();
+            this.formattedTextMcServerPort.setValue(mcServerPort);
+        }
+        
         this.configuration.setHost(this.textHost.getText());
         this.configuration.setPort(port);
         this.configuration.setPass(new String(this.textPassword.getPassword()));
-        this.configuration.setNick(this.textNickname.getText());
-        this.configuration.setName(this.textUsername.getText());
+        this.configuration.setNickname(this.textNickname.getText());
+        this.configuration.setAltNickname(this.textAltNickname.getText());
+        
+        this.configuration.setMinecraftServerHost(this.textMcServerHostname.getText());
+        this.configuration.setMinecraftServerPort(mcServerPort);
         
         // save admins
         List<String> admins = new ArrayList<String>();
         for (String[] row : this.listEditorAdmins.getRows()) {
-            admins.add(row[0]);
+            admins.add(row[0].trim());
         }
         this.configuration.setAdmins(admins);        
         
         // save channels
         List<String> channels = new ArrayList<String>();
         for (String[] row : this.listEditorChannels.getRows()) {
-            channels.add(row[0]);
+            channels.add(row[0].trim());
         }
         this.configuration.setChannels(channels);          
         
         // save triggers
         List<Trigger> triggers = new ArrayList<Trigger>();
         for (String[] row : this.listEditorTriggers.getRows()) {
-            triggers.add(new Trigger(row[0], row[1], row[2]));
+            Integer coolDown = 0;
+            try { 
+                coolDown = row[3] == null ? 0 : Integer.parseInt(row[3].trim()); 
+            } catch(NumberFormatException e) {
+                this.textLog.append("ERR: " + e.getMessage() + "\n");
+            }
+            triggers.add(new Trigger(row[0].trim(), row[1].trim(), row[2].trim(), coolDown));
         }
         this.configuration.setTriggers(triggers);
+        
+        // save commands
+        Map<String,Integer> commandCoolDowns = new HashMap<String,Integer>();
+        for (String[] row : this.listEditorCommands.getRows()) {
+            Integer coolDown = 0;
+            try { 
+                coolDown = row[1] == null ? 0 : Integer.parseInt(row[1].trim()); 
+            } catch(NumberFormatException e) {
+                this.textLog.append("ERR: " + e.getMessage() + "\n");
+            }
+            commandCoolDowns.put(row[0].trim(), coolDown);
+        }
+        this.configuration.setCommandCoolDowns(commandCoolDowns);
     }
-    
 
     @Override
     public void onConfigChangeEventOccurred(OnConfigChangeEvent evt) {
@@ -229,11 +291,17 @@ public class MainFrame
         panelUser = new javax.swing.JPanel();
         labelNickname = new javax.swing.JLabel();
         textNickname = new javax.swing.JTextField();
-        labelUsername = new javax.swing.JLabel();
-        textUsername = new javax.swing.JTextField();
+        labelAltNickname = new javax.swing.JLabel();
+        textAltNickname = new javax.swing.JTextField();
         listEditorAdmins = new mewkbot.ListEditor();
-        listEditorTriggers = new mewkbot.ListEditor();
         listEditorChannels = new mewkbot.ListEditor();
+        listEditorCommands = new mewkbot.ListEditor();
+        listEditorTriggers = new mewkbot.ListEditor();
+        panelMcServer = new javax.swing.JPanel();
+        labelMcServerHost = new javax.swing.JLabel();
+        textMcServerHostname = new javax.swing.JTextField();
+        labelMcServerPort = new javax.swing.JLabel();
+        formattedTextMcServerPort = new javax.swing.JFormattedTextField();
         buttonStart = new javax.swing.JButton();
         buttonStop = new javax.swing.JButton();
         labelStatusIcon = new javax.swing.JLabel();
@@ -263,7 +331,7 @@ public class MainFrame
 
         labelPort.setText("Port:");
 
-        formattedTextPort.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#####"))));
+        formattedTextPort.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
 
         labelPassword.setText("Password:");
 
@@ -306,7 +374,7 @@ public class MainFrame
 
         labelNickname.setText("Nickname:");
 
-        labelUsername.setText("Username:");
+        labelAltNickname.setText("Alt. Nickname:");
 
         javax.swing.GroupLayout panelUserLayout = new javax.swing.GroupLayout(panelUser);
         panelUser.setLayout(panelUserLayout);
@@ -316,11 +384,11 @@ public class MainFrame
                 .addContainerGap()
                 .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(labelNickname)
-                    .addComponent(labelUsername))
+                    .addComponent(labelAltNickname))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(textUsername, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                    .addComponent(textNickname, javax.swing.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE))
+                    .addComponent(textAltNickname, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE)
+                    .addComponent(textNickname, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelUserLayout.setVerticalGroup(
@@ -332,15 +400,53 @@ public class MainFrame
                     .addComponent(textNickname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(panelUserLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelUsername)
-                    .addComponent(textUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(labelAltNickname)
+                    .addComponent(textAltNickname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(251, Short.MAX_VALUE))
         );
 
         tabPaneConfiguration.addTab("User", panelUser);
         tabPaneConfiguration.addTab("Admins", listEditorAdmins);
-        tabPaneConfiguration.addTab("Triggers", listEditorTriggers);
         tabPaneConfiguration.addTab("Channels", listEditorChannels);
+        tabPaneConfiguration.addTab("Commands", listEditorCommands);
+        tabPaneConfiguration.addTab("Triggers", listEditorTriggers);
+
+        labelMcServerHost.setText("Host:");
+
+        labelMcServerPort.setText("Port:");
+
+        formattedTextMcServerPort.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+
+        javax.swing.GroupLayout panelMcServerLayout = new javax.swing.GroupLayout(panelMcServer);
+        panelMcServer.setLayout(panelMcServerLayout);
+        panelMcServerLayout.setHorizontalGroup(
+            panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelMcServerLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelMcServerHost)
+                    .addComponent(labelMcServerPort))
+                .addGap(10, 10, 10)
+                .addGroup(panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textMcServerHostname, javax.swing.GroupLayout.DEFAULT_SIZE, 357, Short.MAX_VALUE)
+                    .addComponent(formattedTextMcServerPort, javax.swing.GroupLayout.DEFAULT_SIZE, 357, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        panelMcServerLayout.setVerticalGroup(
+            panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelMcServerLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelMcServerHost)
+                    .addComponent(textMcServerHostname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(panelMcServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelMcServerPort)
+                    .addComponent(formattedTextMcServerPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(251, Short.MAX_VALUE))
+        );
+
+        tabPaneConfiguration.addTab("MC Server", panelMcServer);
 
         tabPaneMain.addTab("Config", tabPaneConfiguration);
 
@@ -419,10 +525,10 @@ private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:even
 
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
     this.loadConfig();
-    this.config2Gui();
 
     this.bot = new IrcBot(this.configuration);
 
+    this.bot.addBotCommand(new DefaultCommand());
     this.bot.addBotCommand(new JoinCommand());
     this.bot.addBotCommand(new PartCommand());
     this.bot.addBotCommand(new QuitCommand());
@@ -438,31 +544,41 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
     this.bot.addOnSendEventListener(this);
     this.bot.addOnStartEventListener(this);
     this.bot.addOnStopEventListener(this);
+    
+    this.config2Gui();
+    
+    this.textLog.append("MewKBot " + version + " 2012\n");
 }//GEN-LAST:event_formWindowOpened
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStop;
+    private javax.swing.JFormattedTextField formattedTextMcServerPort;
     private javax.swing.JFormattedTextField formattedTextPort;
+    private javax.swing.JLabel labelAltNickname;
     private javax.swing.JLabel labelHost;
+    private javax.swing.JLabel labelMcServerHost;
+    private javax.swing.JLabel labelMcServerPort;
     private javax.swing.JLabel labelNickname;
     private javax.swing.JLabel labelPassword;
     private javax.swing.JLabel labelPort;
     private javax.swing.JLabel labelStatusIcon;
-    private javax.swing.JLabel labelUsername;
     private mewkbot.ListEditor listEditorAdmins;
     private mewkbot.ListEditor listEditorChannels;
+    private mewkbot.ListEditor listEditorCommands;
     private mewkbot.ListEditor listEditorTriggers;
+    private javax.swing.JPanel panelMcServer;
     private javax.swing.JPanel panelServer;
     private javax.swing.JPanel panelUser;
     private javax.swing.JScrollPane scrollPaneLog;
     private javax.swing.JTabbedPane tabPaneConfiguration;
     private javax.swing.JTabbedPane tabPaneMain;
+    private javax.swing.JTextField textAltNickname;
     private javax.swing.JTextField textHost;
     private javax.swing.JTextArea textLog;
+    private javax.swing.JTextField textMcServerHostname;
     private javax.swing.JTextField textNickname;
     private javax.swing.JPasswordField textPassword;
-    private javax.swing.JTextField textUsername;
     // End of variables declaration//GEN-END:variables
 
     public static void main(String args[]) {

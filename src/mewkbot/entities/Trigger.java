@@ -8,6 +8,7 @@ public class Trigger {
     private String channel;
     private String trigger;
     private String message;
+    private Integer coolDown;
 
     /**
      * @return the channel
@@ -50,16 +51,32 @@ public class Trigger {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    /**
+     * @return the coolDown
+     */
+    public Integer getCoolDown() {
+        return coolDown;
+    }
+
+    /**
+     * @param coolDown the coolDown to set
+     */
+    public void setCoolDown(Integer coolDown) {
+        this.coolDown = coolDown;
+    }
       
     public Trigger() {
         this.channel = null;
         this.trigger = null;
         this.message = null;
+        this.coolDown = 0;
     }
         
-    public Trigger(String channel, String trigger, String message) {
+    public Trigger(String channel, String trigger, String message, Integer coolDown) {
         this.channel = channel;
         this.trigger = trigger;
         this.message = message;
+        this.coolDown = coolDown;
     }
 }
