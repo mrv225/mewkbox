@@ -104,6 +104,7 @@ public class MainFrame
         for (String admin : this.configuration.getAdmins()) {
             rowsAdmin.add(new String[] { admin });
         }
+        this.listEditorAdmins.clearRows();
         this.listEditorAdmins.addRows(rowsAdmin);
         
         
@@ -112,6 +113,7 @@ public class MainFrame
         for (String channel : this.configuration.getChannels()) {
             rowsChannel.add(new String[] { channel });
         }
+        this.listEditorChannels.clearRows();
         this.listEditorChannels.addRows(rowsChannel);
         
         
@@ -120,6 +122,7 @@ public class MainFrame
         for (Trigger trigger : this.configuration.getTriggers()) {
             rowsTrigger.add(new String[] { trigger.getChannel(), trigger.getTrigger(), trigger.getMessage() });
         }
+        this.listEditorTriggers.clearRows();
         this.listEditorTriggers.addRows(rowsTrigger);
     }
     
@@ -162,7 +165,7 @@ public class MainFrame
 
     @Override
     public void onConfigChangeEventOccurred(OnConfigChangeEvent evt) {
-        this.gui2Config();
+        this.config2Gui();
     }
     
     @Override
@@ -388,12 +391,14 @@ public class MainFrame
 private void buttonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStartActionPerformed
     this.buttonStart.setEnabled(false);
     this.buttonStop.setEnabled(true);
+    this.gui2Config();
     this.startBot();
 }//GEN-LAST:event_buttonStartActionPerformed
 
 private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStopActionPerformed
     this.buttonStart.setEnabled(true);
     this.buttonStop.setEnabled(false);
+    this.config2Gui();
     this.stopBot();
 }//GEN-LAST:event_buttonStopActionPerformed
 
