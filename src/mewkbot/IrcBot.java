@@ -240,7 +240,6 @@ public class IrcBot implements Runnable {
     
     private boolean handlePrivMsg(String nickname, String command, String target, String content) {
         boolean _continue = true;
-        
         try {
             Channel channel = this.getChannels().get(target);
             
@@ -260,14 +259,14 @@ public class IrcBot implements Runnable {
                 
                 // lookup command
                 ICommand botCommandInstance = this.commands.get(botCommand);
-                if (botCommandInstance != null) {
-                    _continue = botCommandInstance.run(user, channel, botParameter, this);
-                } else {
-                    // default command
+                if (botCommandInstance == null) {
+                    // lookup default command
                     botCommandInstance = this.commands.get("*");
-                    if (botCommandInstance != null) {
-                        _continue = botCommandInstance.run(user, channel, botParameter, this);
-                    }
+                }
+                
+                if (botCommandInstance != null) {
+                    // TODO: Roles and Cooldowns
+                    _continue = botCommandInstance.run(user, channel, botParameter, this);
                 }
             }
         } catch (Exception e) {

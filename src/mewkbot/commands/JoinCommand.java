@@ -23,9 +23,7 @@ public class JoinCommand implements ICommand {
 
     @Override
     public boolean run(User user, Channel channel, String data, IrcBot client) {
-        //TODO
-//        if (user.isAdmin() && data.startsWith("#")) {
-        if (user.isOperator() && data.startsWith("#")) {
+        if (user.isAdmin() && data.startsWith("#")) {
             client.log("join " + data);
             client.joinChannel(data);
         }

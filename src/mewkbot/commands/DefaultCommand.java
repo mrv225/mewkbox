@@ -25,7 +25,7 @@ public class DefaultCommand implements ICommand {
 
     @Override
     public boolean run(User user, Channel channel, String data, IrcBot client) {
-        //TODO Cooldown
+        //TODO Trigger Cooldown
         if (data.startsWith("!") && channel != null) {
             List<Trigger> triggers = client.getConfig().getTriggers();
             for (int i = 0; i < triggers.size(); i++) {
