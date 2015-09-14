@@ -1,0 +1,1 @@
+An IRC chat bot optimized for the Twitch.tv network.
